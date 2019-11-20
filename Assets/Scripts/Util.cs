@@ -31,6 +31,17 @@ public class Util
         return Mathf.Abs(Clamp180(here - there));
     }
 
+    /// <summary>
+    /// Caps the given number such that its absolute value will not exceed the maximum.
+    /// </summary>
+    /// <param name="n">the number to cap</param>
+    /// <param name="max">the maximum absolute value for the number</param>
+    /// <returns>the number capped so that its absolute value does not exceed max</returns>
+    public static float Cap(float n, float max)
+    {
+        return Mathf.Sign(n) * Mathf.Min(Mathf.Abs(n), max);
+    }
+
     public static int GetTurnDirection(float currentAngle, float targetAngle)
     {
         float way1 = Clamp360(currentAngle - targetAngle);

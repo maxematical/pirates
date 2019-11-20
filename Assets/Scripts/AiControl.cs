@@ -33,58 +33,35 @@ public class AiControl : ShipControl
         // Update state
         AiState nextState = _state.Update();
 
-        // Update heading/speed based on desired values
-
-        // Turn towards desired heading
-        float deltaRotation = Util.Clamp180(_helper.Heading - _state.DesiredHeading);
-        float distanceToTargetHeading = Util.AngleDist(_helper.Heading, _state.DesiredHeading); // AKA rotationSize
-        float turnDir = Util.GetTurnDirection(_helper.Heading, _state.DesiredHeading);
-
-        float angularAcceleration = 0;
-
-        // Stop within 10 degrees of the target
-        if (distanceToTargetHeading < 10 && false)
+        // Turn towards the desired heading
+        // This uses an angular acceleration approach, which makes the turns more smooth and realistic looking.
+        // The code is roughly based off of page 25 of the following PDF:
+        // http://web.archive.org/web/20191120175833/https://imada.sdu.dk/~marco/Teaching/AY2012-2013/DM810/Slides/dm810-lec2.pdf
+        float distanceToTargetHeading = Util.AngleDist(_helper.Heading, _state.DesiredHeading);
+        
+        // Compute target angular velocity
+        float targetAngularVelocity;
+        if (distanceToTargetHeading > Settings.SlowRadius)
         {
-            angularAcceleration = 0;
+            targetAngularVelocity = Settings.MaxRotationSpeed;
         }
         else
         {
-            float maxRotationSpeed = 60f; // maxRotation
-            float slowRadius = 8f;
-            float maxAngularAccleration = 30f;
-            float timeToTarget = 0.1f;
-            
-            float targetAngularVelocity;
-            // Begin to slow within 30 degrees
-            if (distanceToTargetHeading > slowRadius)
-            {
-                targetAngularVelocity = maxRotationSpeed;
-            }
-            else
-            {
-                targetAngularVelocity = maxRotationSpeed * distanceToTargetHeading / slowRadius;
-            }
-            targetAngularVelocity *= Util.GetTurnDirection(_helper.Heading, _state.DesiredHeading);
-
-            angularAcceleration = (targetAngularVelocity - _angularVelocity) / timeToTarget;
-
-            if (Mathf.Abs(angularAcceleration) > maxAngularAccleration)
-            {
-                //angularAccleration = Mathf.Sign(angularAcceleration) * maxAngularAcceleration;
-            }
-            //angularAcceleration = Mathf.Min(maxAngularAccleration, angular);
+            targetAngularVelocity = Settings.MaxRotationSpeed * distanceToTargetHeading / Settings.SlowRadius * 0.8f;
         }
-        Debug.Log(angularAcceleration);
+        targetAngularVelocity *= Util.GetTurnDirection(_helper.Heading, _state.DesiredHeading);
 
-        // Determine which way is most efficient to turn
-        //float angularAcceleration = Util.GetTurnDirection(_helper.Heading, _state.DesiredHeading) * Settings.RotationAcceleration;
-        float nextAngularVelocity = _angularVelocity + angularAcceleration * Time.deltaTime;
-        nextAngularVelocity = Mathf.Sign(nextAngularVelocity) * Mathf.Min(Mathf.Abs(nextAngularVelocity), Settings.MaxRotationSpeed); // cap angular velocity
+        // Compute angular acceleration
+        float angularAcceleration = Util.Cap((targetAngularVelocity - _angularVelocity) / Settings.TimeToTarget, Settings.MaxAngularAcceleration);
+        
+        // Update angular velocity by applying the acceleration
+        _angularVelocity = Util.Cap(_angularVelocity + angularAcceleration * Time.deltaTime, Settings.MaxRotationSpeed);
 
-        _angularVelocity = nextAngularVelocity;
+        // Update heading by applying angular velocity
         float nextHeading = _helper.Heading + _angularVelocity * Time.deltaTime;
         transform.rotation = Quaternion.Euler(0, nextHeading, 0);
 
+        // Update speed to desired amount
         Speed = _state.DesiredSpeed;
 
         // Change state to next
@@ -301,11 +278,18 @@ public class AiControl : ShipControl
         public float PursuitSpeedMultiplier;
 
         [Header("Circle State Settings")]
+        [Tooltip("Unused (AT TIME OF WRITING)")]
         public float MaxBroadsideAngle;
 
         [Header("Navigation Settings")]
-        public float MaxRotationSpeed;
-        public float RotationAcceleration;
+        [Tooltip("The maximum angular speed that can be reached")]
+        public float MaxRotationSpeed = 60f;
+        [Tooltip("The radius in which the AI will attempt to slow down its rotation, in degrees")]
+        public float SlowRadius = 20f;
+        [Tooltip("Maximum angular acceleration")]
+        public float MaxAngularAcceleration = 20f;
+        [Tooltip("Amount of time used to reach target angular velocity, lower values give faster acceleration")]
+        public float TimeToTarget = 0.05f;
 
         [Header("Cannon Settings")]
         public float CannonRange;

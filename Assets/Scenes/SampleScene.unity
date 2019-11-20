@@ -442,7 +442,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 582cd1becdda81041b4053e7f0b3fa05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BaseSpeed: 2
+  BaseSpeed: 1.75
   CannonballPrefab: {fileID: 2108215847276787037, guid: 6d84d27bb4a9944418c2657b1007627d,
     type: 3}
   CannonballSpawnL: {fileID: 419193085}
@@ -717,13 +717,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Player: {fileID: 765587200}
   Settings:
-    BaseSpeed: 2
+    BaseSpeed: 1.75
     PursuitStartDistance: 12
     PursuitStopDistance: 8
     PursuitSpeedMultiplier: 1.2
     MaxBroadsideAngle: 30
     MaxRotationSpeed: 35
-    RotationAcceleration: 20
+    SlowRadius: 30
+    MaxAngularAcceleration: 20
+    TimeToTarget: 0.05
     CannonRange: 80
     CannonAngle: 60
     ReloadSpeed:
