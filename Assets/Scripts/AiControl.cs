@@ -36,9 +36,53 @@ public class AiControl : ShipControl
         // Update heading/speed based on desired values
 
         // Turn towards desired heading
+        float deltaRotation = Util.Clamp180(_helper.Heading - _state.DesiredHeading);
+        float distanceToTargetHeading = Util.AngleDist(_helper.Heading, _state.DesiredHeading); // AKA rotationSize
+        float turnDir = Util.GetTurnDirection(_helper.Heading, _state.DesiredHeading);
+
+        float angularAcceleration = 0;
+
+        // Stop within 10 degrees of the target
+        if (distanceToTargetHeading < 10 && false)
+        {
+            angularAcceleration = 0;
+        }
+        else
+        {
+            float maxRotationSpeed = 60f; // maxRotation
+            float slowRadius = 8f;
+            float maxAngularAccleration = 30f;
+            float timeToTarget = 0.1f;
+            
+            float targetAngularVelocity;
+            // Begin to slow within 30 degrees
+            if (distanceToTargetHeading > slowRadius)
+            {
+                targetAngularVelocity = maxRotationSpeed;
+            }
+            else
+            {
+                targetAngularVelocity = maxRotationSpeed * distanceToTargetHeading / slowRadius;
+            }
+            targetAngularVelocity *= Util.GetTurnDirection(_helper.Heading, _state.DesiredHeading);
+
+            angularAcceleration = (targetAngularVelocity - _angularVelocity) / timeToTarget;
+
+            if (Mathf.Abs(angularAcceleration) > maxAngularAccleration)
+            {
+                //angularAccleration = Mathf.Sign(angularAcceleration) * maxAngularAcceleration;
+            }
+            //angularAcceleration = Mathf.Min(maxAngularAccleration, angular);
+        }
+        Debug.Log(angularAcceleration);
+
         // Determine which way is most efficient to turn
-        float deltaHeading = Util.GetTurnDirection(_helper.Heading, _state.DesiredHeading) * Settings.MaxRotationSpeed * Time.deltaTime;
-        float nextHeading = _helper.Heading + deltaHeading;
+        //float angularAcceleration = Util.GetTurnDirection(_helper.Heading, _state.DesiredHeading) * Settings.RotationAcceleration;
+        float nextAngularVelocity = _angularVelocity + angularAcceleration * Time.deltaTime;
+        nextAngularVelocity = Mathf.Sign(nextAngularVelocity) * Mathf.Min(Mathf.Abs(nextAngularVelocity), Settings.MaxRotationSpeed); // cap angular velocity
+
+        _angularVelocity = nextAngularVelocity;
+        float nextHeading = _helper.Heading + _angularVelocity * Time.deltaTime;
         transform.rotation = Quaternion.Euler(0, nextHeading, 0);
 
         Speed = _state.DesiredSpeed;

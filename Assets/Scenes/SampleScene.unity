@@ -722,8 +722,8 @@ MonoBehaviour:
     PursuitStopDistance: 8
     PursuitSpeedMultiplier: 1.2
     MaxBroadsideAngle: 30
-    MaxRotationSpeed: 30
-    RotationAcceleration: 0
+    MaxRotationSpeed: 35
+    RotationAcceleration: 20
     CannonRange: 80
     CannonAngle: 60
     ReloadSpeed:
