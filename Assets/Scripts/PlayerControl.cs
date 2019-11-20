@@ -91,9 +91,8 @@ public class PlayerControl : ShipControl
             Vector3? mouseoverPos = GetMouseoverPosition();
             if (mouseoverPos.HasValue)
             {
-                Vector3 position = this.transform.position;
                 Vector3 target = mouseoverPos.Value;
-                float angle = -Mathf.Atan2(target.z - position.z, target.x - position.x) * Mathf.Rad2Deg + 90;
+                float angle = Util.AngleTowards(transform.position, target);
                 float relativeAngle = Util.Clamp180(angle - transform.rotation.eulerAngles.y);
 
                 // Angle will be the following:

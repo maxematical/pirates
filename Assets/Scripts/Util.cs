@@ -26,6 +26,11 @@ public class Util
         return angle;
     }
 
+    public static float AngleDist(float here, float there)
+    {
+        return Mathf.Abs(Clamp180(here - there));
+    }
+
     public static int GetTurnDirection(float currentAngle, float targetAngle)
     {
         float way1 = Clamp360(currentAngle - targetAngle);

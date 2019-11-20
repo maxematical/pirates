@@ -131,19 +131,35 @@ public class AiControl : ShipControl
         public override AiState Update()
         {
             // Turn such that the AI can easily broadside the player
+
+            // Normally, we want to turn so we are 90 degrees from the player (this is most optimal for shooting)
+            // However, if we are far away, this will usually lead to the AI going too perpendicular to the player's
+            // path and the AI will drift away from the player.
+            // Therefore, we want to constrict the angle the farther away the AI is from the player.
+            // (For example, if the player is 9 units away, then we only want to turn 60 degrees away so we will still
+            // be close to the player)
+            float dist = Mathf.Sqrt(_h.SqrDistanceTo(_h.TargetPos));
+            float broadsideAngle = Mathf.Max(10, 90 + 30 * Mathf.Min(0, 7 - dist));
+
             // There are two ways that we can turn -- with port side facing the player, or starboard side facing the player
             // We'll choose between the two by checking which is faster to turn to, from our current position
             float headingTowardsPlayer = Util.AngleTowards(_h.SelfPos, _h.TargetPos);
-            float broadsideHeading1 = Util.Clamp180(headingTowardsPlayer - 90);
-            float broadsideHeading2 = Util.Clamp180(headingTowardsPlayer + 90);
+            float broadsideHeading1 = Util.Clamp180(headingTowardsPlayer - broadsideAngle);
+            float broadsideHeading2 = Util.Clamp180(headingTowardsPlayer + broadsideAngle);
 
             _gizmosBroadsideHeading1 = broadsideHeading1;
             _gizmosBroadsideHeading2 = broadsideHeading2;
 
             // Decide between broadsideHeading1 or broadsideHeading2 depending on which is closer to the current heading
-            float turnDistance1 = Util.Clamp180(_h.Heading - broadsideHeading1);
-            float turnDistance2 = Util.Clamp180(_h.Heading - broadsideHeading2);
-            float chosenBroadsideHeading = Mathf.Abs(turnDistance1) < Mathf.Abs(turnDistance2) ? broadsideHeading1 : broadsideHeading2;
+            float turnDistance1 = Util.AngleDist(_h.Heading, broadsideHeading1);
+            float turnDistance2 = Util.AngleDist(_h.Heading, broadsideHeading2);
+            float chosenBroadsideHeading = turnDistance1 < turnDistance2 ? broadsideHeading1 : broadsideHeading2;
+
+            // Don't actually turn if the difference is small enough
+            if (Mathf.Abs(Util.Clamp180(_h.Heading - chosenBroadsideHeading)) < _h.Settings.MaxBroadsideAngle)
+            {
+                //chosenBroadsideHeading = _h.Heading;
+            }
 
             DesiredHeading = chosenBroadsideHeading;
             DesiredSpeed = _h.Settings.BaseSpeed;
@@ -177,6 +193,20 @@ public class AiControl : ShipControl
                 return;
             }
 
+            // Check that we aren't at too extreme an angle to fire (e.g. don't fire off the bow of the ship)
+            float angleTowardsPlayer = Util.AngleTowards(_h.SelfPos, _h.TargetPos);
+            float relativeAngle = Util.Clamp180(angleTowardsPlayer - _h.Heading);
+            // Angle will be the following:
+            // * 0: Front
+            // * 180: Back
+            // * 0 to 180: Right
+            // * -180 to 0: Left
+            if (Mathf.Abs(relativeAngle) < _h.Settings.CannonAngle || Mathf.Abs(relativeAngle) > 180 - _h.Settings.CannonAngle)
+            {
+                return;
+            }
+
+            // Check if we are in range, then if necessary, fire
             float sqrDistance = _h.SqrDistanceTo(_h.TargetPos);
             if (sqrDistance <= _h.Settings.CannonRange * _h.Settings.CannonRange)
             {
@@ -225,6 +255,9 @@ public class AiControl : ShipControl
         public float PursuitStartDistance;
         public float PursuitStopDistance;
         public float PursuitSpeedMultiplier;
+
+        [Header("Circle State Settings")]
+        public float MaxBroadsideAngle;
 
         [Header("Navigation Settings")]
         public float MaxRotationSpeed;

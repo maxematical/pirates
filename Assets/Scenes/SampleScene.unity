@@ -468,7 +468,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3cf860026741f9f4e847262cba5b9bc6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BaseHealth: 3
+  BaseHealth: 300
 --- !u!1 &897651563
 GameObject:
   m_ObjectHideFlags: 0
@@ -721,10 +721,11 @@ MonoBehaviour:
     PursuitStartDistance: 12
     PursuitStopDistance: 8
     PursuitSpeedMultiplier: 1.2
+    MaxBroadsideAngle: 30
     MaxRotationSpeed: 30
     RotationAcceleration: 0
-    CannonRange: 8
-    CannonAngle: 0
+    CannonRange: 80
+    CannonAngle: 60
     ReloadSpeed:
       Min: 1.25
       Max: 1.75
