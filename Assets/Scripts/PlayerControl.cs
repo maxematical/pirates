@@ -94,7 +94,7 @@ public class PlayerControl : ShipControl
                 Vector3 position = this.transform.position;
                 Vector3 target = mouseoverPos.Value;
                 float angle = -Mathf.Atan2(target.z - position.z, target.x - position.x) * Mathf.Rad2Deg + 90;
-                float relativeAngle = Util.ClampAngle(angle - transform.rotation.eulerAngles.y);
+                float relativeAngle = Util.Clamp180(angle - transform.rotation.eulerAngles.y);
 
                 // Angle will be the following:
                 // * 0: Front
@@ -127,7 +127,7 @@ public class PlayerControl : ShipControl
         Vector2 mousePos = Input.mousePosition;
 
         RaycastHit hitInfo;
-        bool hit = Physics.Raycast(Camera.main.ScreenPointToRay(mousePos), out hitInfo, 10f, LayerMask.GetMask("Sea"));
+        bool hit = Physics.Raycast(Camera.main.ScreenPointToRay(mousePos), out hitInfo, 30f, LayerMask.GetMask("Sea"));
         return hit ? hitInfo.point : (Vector3?)null;
     }
 

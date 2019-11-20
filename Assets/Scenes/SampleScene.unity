@@ -208,7 +208,7 @@ Transform:
   m_GameObject: {fileID: 405364693}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 3, y: 3, z: 3}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
@@ -577,7 +577,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   m_LocalRotation: {x: 0.60876137, y: 0, z: 0, w: 0.7933534}
-  m_LocalPosition: {x: 0, y: 6.27, z: -1.8}
+  m_LocalPosition: {x: 0, y: 17.04, z: -4.69}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -609,6 +609,7 @@ GameObject:
   - component: {fileID: 1993347977}
   - component: {fileID: 1993347976}
   - component: {fileID: 1993347980}
+  - component: {fileID: 1993347981}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -683,7 +684,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1993347975}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.72, y: 0, z: 0}
+  m_LocalPosition: {x: 8.84, y: 0, z: 0}
   m_LocalScale: {x: 0.8, y: 1, z: 2.5}
   m_Children: []
   m_Father: {fileID: 0}
@@ -702,3 +703,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BaseHealth: 3
+--- !u!114 &1993347981
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1993347975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b962ad48f903b48b2c602b6a1c8bf6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Player: {fileID: 765587200}
+  Settings:
+    BaseSpeed: 2
+    PursuitStartDistance: 12
+    PursuitStopDistance: 8
+    PursuitSpeedMultiplier: 1.2
+    MaxRotationSpeed: 30
+    RotationAcceleration: 0
+    CannonRange: 8
+    CannonAngle: 0
+    ReloadSpeed:
+      Min: 1.25
+      Max: 1.75
+    CannonballGravity: 2
+    CannonballSpeed: 4
+  CannonballPrefab: {fileID: 2108215847276787037, guid: 6d84d27bb4a9944418c2657b1007627d,
+    type: 3}

@@ -18,7 +18,7 @@ public class ShipControl : MonoBehaviour
         transform.position += velocity * Time.fixedDeltaTime;
     }
 
-    protected Vector3 CalculateCannonballTrajectory(Vector3 spawnPos, Vector3 target, float speed, float gravity)
+    public Vector3 CalculateCannonballTrajectory(Vector3 spawnPos, Vector3 target, float speed, float gravity)
     {
         Vector3 position = this.transform.position;
         float yawAngle = -Mathf.Atan2(target.z - position.z, target.x - position.x) * Mathf.Rad2Deg + 90;

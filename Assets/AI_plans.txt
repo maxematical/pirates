@@ -1,0 +1,15 @@
+AI Behaviors:
+- Pursue: when the AI is too far, move closer to the player
+- Circle and fire: when the AI is close enough (but not too close) and they have a good angle to fire.
+  Continue to circle as long as the player is in range
+
+Most efficient way to turn:
+179 -> -179
+Way 1: 179-(-179) = 358 (Turn decreasing the angle)
+Way 2: 360-358   = 2    (Turn increasing the angle)
+Way 2 is closer
+
+
+Comparing angle distance
+150 vs 359 who wins? 359 Bigger isn't always better
+150 vs -1 who wins? -1 Closer to zero is better
