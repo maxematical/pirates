@@ -34,7 +34,7 @@ public class ShipControl : MonoBehaviour
         // If the angle is NaN, then we are technically out of range, but can do our best to fire anyways
         if (float.IsNaN(pitchAngle))
         {
-            pitchAngle = -45;
+            pitchAngle = 45;
         }
 
         return Quaternion.Euler(-pitchAngle, yawAngle, 0) * Vector3.forward * speed;
