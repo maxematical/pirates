@@ -111,7 +111,7 @@ public class PlayerControl : ShipControl
                 Vector3 spawnPos = spawner.transform.position;
 
                 GameObject instantiated = Instantiate(CannonballPrefab, spawnPos, Quaternion.identity);
-                Vector3 cannonballVelocity = CalculateCannonballTrajectory(spawnPos, target, CannonballSpeed, CannonballGravity);
+                Vector3 cannonballVelocity = CalculateCannonballTrajectory(spawnPos, target, CannonballSpeed, CannonballGravity) + this.Velocity;
 
                 Cannonball cannonball = instantiated.GetComponent<Cannonball>();
                 cannonball.Velocity = cannonballVelocity;

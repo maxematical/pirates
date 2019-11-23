@@ -160,7 +160,8 @@ public class AiControl : ShipControl
             // (For example, if the player is 9 units away, then we only want to turn 60 degrees away so we will still
             // be close to the player)
             float dist = Mathf.Sqrt(_h.SqrDistanceTo(_h.TargetPos));
-            float broadsideAngle = Mathf.Max(10, 90 + 30 * Mathf.Min(0, 7 - dist));
+            float broadsideAngle = Mathf.Max(10, 90 + 10 * Mathf.Min(0, 5 - dist));
+            float speedMultiplier = 1 + Mathf.Clamp(0.05f * (65 - broadsideAngle), 0, 0.4f); // move faster when angle is constricted
 
             // There are two ways that we can turn -- with port side facing the player, or starboard side facing the player
             // We'll choose between the two by checking which is faster to turn to, from our current position
@@ -183,7 +184,7 @@ public class AiControl : ShipControl
             }
 
             DesiredHeading = chosenBroadsideHeading;
-            DesiredSpeed = _h.Settings.BaseSpeed;
+            DesiredSpeed = _h.Settings.BaseSpeed * speedMultiplier;
 
             // If we are in range, fire some cannonballs
             TryFireCannons();
@@ -250,6 +251,7 @@ public class AiControl : ShipControl
                     predictedTime = _ai.PredictCannonballTime(spawnPos, predictedTargetPos, _h.Settings.CannonballSpeed, _h.Settings.CannonballGravity);
                 }
 
+                // TODO AI cannonballs inherit AI ship velocity, and update prediction to take this into account
                 GameObject instantiated = Instantiate(_ai.CannonballPrefab, spawnPos, Quaternion.identity);
                 Cannonball cannonball = instantiated.GetComponent<Cannonball>();
                 cannonball.Gravity = _h.Settings.CannonballGravity;

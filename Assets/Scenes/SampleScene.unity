@@ -448,8 +448,8 @@ MonoBehaviour:
   CannonballSpawnL: {fileID: 419193085}
   CannonballSpawnR: {fileID: 897651563}
   MaxFiringAngle: 30
-  CannonballSpeed: 4
-  CannonballGravity: 1.5
+  CannonballSpeed: 5
+  CannonballGravity: 3
   MaxRotationSpeed: 45
   RotationAcceleration: 130
   RotationDamping: 0.99
@@ -717,10 +717,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Player: {fileID: 765587200}
   Settings:
-    BaseSpeed: 1.75
-    PursuitStartDistance: 12
-    PursuitStopDistance: 8
-    PursuitSpeedMultiplier: 1.2
+    BaseSpeed: 1.85
+    PursuitStartDistance: 14
+    PursuitStopDistance: 11
+    PursuitSpeedMultiplier: 1.175
     MaxBroadsideAngle: 30
     MaxRotationSpeed: 35
     SlowRadius: 30
@@ -731,7 +731,7 @@ MonoBehaviour:
     ReloadSpeed:
       Min: 1.25
       Max: 1.75
-    CannonballGravity: 2
-    CannonballSpeed: 4
+    CannonballGravity: 3
+    CannonballSpeed: 5
   CannonballPrefab: {fileID: 2108215847276787037, guid: 6d84d27bb4a9944418c2657b1007627d,
     type: 3}
