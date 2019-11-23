@@ -233,10 +233,20 @@ public class AiControl : ShipControl
             {
                 Vector3 spawnPos = _h.SelfPos;
 
+                // Basic velocity prediction
+                // Predict how long a cannonball would take to land, if it was shot directly to where the target is right
+                // now.
+                // Then shoot the cannonball to where the target will be in that amount of time
+                // This isn't perfect because technically the amount of time for the cannonball to land is dependent on the
+                // distance to the target, so if we're changing the distance, we'll get a slightly different answer for where
+                // it will land
+                float predictedTime = _ai.PredictCannonballTime(spawnPos, _h.TargetPos, _h.Settings.CannonballSpeed, _h.Settings.CannonballGravity);
+                Vector3 predictedTargetPos = _h.TargetPos + predictedTime * _h.TargetVelocity;
+
                 GameObject instantiated = Instantiate(_ai.CannonballPrefab, spawnPos, Quaternion.identity);
                 Cannonball cannonball = instantiated.GetComponent<Cannonball>();
                 cannonball.Gravity = _h.Settings.CannonballGravity;
-                cannonball.Velocity = _ai.CalculateCannonballTrajectory(spawnPos, _h.TargetPos, _h.Settings.CannonballSpeed, _h.Settings.CannonballGravity);
+                cannonball.Velocity = _ai.CalculateCannonballTrajectory(spawnPos, predictedTargetPos, _h.Settings.CannonballSpeed, _h.Settings.CannonballGravity);
                 cannonball.IgnoreCollisions = _h.Self;
 
                 _ai.TimeUntilReloaded = _ai.Settings.ReloadSpeed.RandomInRange;
@@ -253,12 +263,16 @@ public class AiControl : ShipControl
         public Vector3 SelfPos { get => Self.transform.position; }
         public Vector3 TargetPos { get => Target.transform.position; }
         public float Heading { get => Self.transform.rotation.eulerAngles.y; }
+        public Vector3 TargetVelocity { get => _targetShip?.Velocity ?? Vector3.zero; }
+
+        private ShipControl _targetShip;
 
         public AiHelper(GameObject self, GameObject target, AiSettings settings)
         {
             Self = self;
             Target = target;
             Settings = settings;
+            _targetShip = target.GetComponent<ShipControl>();
         }
 
         public float SqrDistanceTo(Vector3 other)

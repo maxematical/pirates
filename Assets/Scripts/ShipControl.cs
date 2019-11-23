@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class ShipControl : MonoBehaviour
 {
+    public Vector3 Velocity { get => Speed * transform.forward; }
+
     protected float Speed;
 
     void Start()
@@ -36,6 +38,17 @@ public class ShipControl : MonoBehaviour
         }
 
         return Quaternion.Euler(-pitchAngle, yawAngle, 0) * Vector3.forward * speed;
+    }
+
+    public float PredictCannonballTime(Vector3 spawnPos, Vector3 target, float ks, float kg)
+    {
+        float x = (spawnPos - target).magnitude * kg / (ks * ks);
+        float predictedLandingTime = 2f * ks / kg * Mathf.Sqrt(0.5f * (1 - Mathf.Sqrt(1 - x * x)));
+        if (x * x > 0)
+        {
+            predictedLandingTime = 0f;
+        }
+        return predictedLandingTime;
     }
 
     protected bool IsWithinCannonRange(Vector3 spawnPos, Vector3 target, float speed, float gravity)
