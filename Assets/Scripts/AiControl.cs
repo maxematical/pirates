@@ -239,9 +239,16 @@ public class AiControl : ShipControl
                 // Then shoot the cannonball to where the target will be in that amount of time
                 // This isn't perfect because technically the amount of time for the cannonball to land is dependent on the
                 // distance to the target, so if we're changing the distance, we'll get a slightly different answer for where
-                // it will land
+                // it will land.
+                // To solve this, we run multiple iterations of the prediction and cross our fingers it's close enough
+
+                Vector3 predictedTargetPos = Vector3.zero; // will be initialized in the for-loop
                 float predictedTime = _ai.PredictCannonballTime(spawnPos, _h.TargetPos, _h.Settings.CannonballSpeed, _h.Settings.CannonballGravity);
-                Vector3 predictedTargetPos = _h.TargetPos + predictedTime * _h.TargetVelocity;
+                for (int i = 0; i < 3; i++)
+                {
+                    predictedTargetPos = _h.TargetPos + predictedTime * _h.TargetVelocity;
+                    predictedTime = _ai.PredictCannonballTime(spawnPos, predictedTargetPos, _h.Settings.CannonballSpeed, _h.Settings.CannonballGravity);
+                }
 
                 GameObject instantiated = Instantiate(_ai.CannonballPrefab, spawnPos, Quaternion.identity);
                 Cannonball cannonball = instantiated.GetComponent<Cannonball>();

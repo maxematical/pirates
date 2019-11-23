@@ -44,9 +44,9 @@ public class ShipControl : MonoBehaviour
     {
         float x = (spawnPos - target).magnitude * kg / (ks * ks);
         float predictedLandingTime = 2f * ks / kg * Mathf.Sqrt(0.5f * (1 - Mathf.Sqrt(1 - x * x)));
-        if (x * x > 0)
+        if (x * x > 1)
         {
-            predictedLandingTime = 0f;
+            predictedLandingTime = 2f * ks / kg * Mathf.Sqrt(0.5f);
         }
         return predictedLandingTime;
     }
