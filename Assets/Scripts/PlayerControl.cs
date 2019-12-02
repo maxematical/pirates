@@ -11,6 +11,8 @@ public class PlayerControl : ShipControl
     public GameObject CannonballSpawnL;
     public GameObject CannonballSpawnR;
 
+    public CaravelModelController Caravel;
+
     [Tooltip("The maximum horizontal angle that cannonballs can be fired from, measured from the helm/stern, in degrees")]
     public float MaxFiringAngle;
 
@@ -82,6 +84,9 @@ public class PlayerControl : ShipControl
         {
             _angularVelocity = 0;
         }
+
+        // Animate model
+        Caravel.TargetRudderTilt = rotateInput * 30;
     }
 
     private void HandleFireInput()
