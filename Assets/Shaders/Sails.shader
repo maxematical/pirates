@@ -25,6 +25,7 @@
         struct Input
         {
             float2 uv_MainTex;
+            float3 viewDir;
         };
 
         half _Glossiness;
@@ -47,6 +48,8 @@
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;
             o.Alpha = c.a;
+
+            o.Normal *= dot(normalize(IN.viewDir), o.Normal) > 0 ? 1 : -1;
         }
         ENDCG
     }
