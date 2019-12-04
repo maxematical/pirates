@@ -568,7 +568,8 @@ GameObject:
   - component: {fileID: 1059587824}
   - component: {fileID: 1059587823}
   - component: {fileID: 1059587822}
-  m_Layer: 0
+  - component: {fileID: 1059587825}
+  m_Layer: 8
   m_Name: Sea_animated
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -666,6 +667,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1059587820}
   m_Mesh: {fileID: 0}
+--- !u!65 &1059587825
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1059587820}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 30, y: 1, z: 30}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1251826050 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -485227329028488799, guid: f1e645c94fe42534bab22bc03b1f9bb5,
