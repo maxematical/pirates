@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657892, g: 0.49641353, b: 0.5748163, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -333,13 +333,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
-  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
+  m_LocalRotation: {x: 0.38302222, y: 0.38302222, z: -0.17860618, w: 0.82139385}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+  m_LocalEulerAnglesHint: {x: 50, y: 50, z: 0}
 --- !u!1 &765587200
 GameObject:
   m_ObjectHideFlags: 0
@@ -604,9 +604,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Filter: {fileID: 1059587824}
   WorldSize: 30
-  VerticesPerUnit: 2
+  VerticesPerUnit: 4
   Waves:
-  - Steepness: 0.4
+  - Steepness: 3
     Amplitude: 0.4
     Wavelength: 2.5
     DirectionXZ: {x: 0.5, y: 0.5}
@@ -616,11 +616,27 @@ MonoBehaviour:
     Wavelength: 4
     DirectionXZ: {x: 0.2, y: 1}
     Speed: 3
-  - Steepness: 0
+  - Steepness: 0.1
+    Amplitude: 0.05
+    Wavelength: 0.5
+    DirectionXZ: {x: 1, y: 0.7}
+    Speed: 2
+  - Steepness: 0.25
     Amplitude: 0.1
-    Wavelength: 1.5
-    DirectionXZ: {x: -1, y: 1}
-    Speed: 1
+    Wavelength: 1.75
+    DirectionXZ: {x: 0.3, y: 0.7}
+    Speed: 1.5
+  - Steepness: 0.08
+    Amplitude: 0.06
+    Wavelength: 0.65
+    DirectionXZ: {x: 0.9, y: 1.2}
+    Speed: 2.2
+  - Steepness: 0.08
+    Amplitude: 0.06
+    Wavelength: 0.65
+    DirectionXZ: {x: 1.2, y: 0.9}
+    Speed: 2.2
+  ResendShaderValues: 1
 --- !u!23 &1059587823
 MeshRenderer:
   m_ObjectHideFlags: 0

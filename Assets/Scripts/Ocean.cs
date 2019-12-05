@@ -13,7 +13,12 @@ public class Ocean : MonoBehaviour
 
     public WaveSettings[] Waves;
 
+    [Tooltip("If this is checked, the ocean will resend shader values every 3 seconds. This is useful when editing " +
+        "shaders during runtime because the wave settings inside the shader are reset when the shader is compiled.")]
+    public bool ResendShaderValues;
+
     private Mesh _mesh;
+    private float _lastSendTime;
 
     void Start()
     {
@@ -62,26 +67,27 @@ public class Ocean : MonoBehaviour
         _mesh.vertices = vertices;
         _mesh.triangles = triangles;
         _mesh.normals = normals;
+        _mesh.bounds = new Bounds(Vector3.zero, new Vector3(WorldSize, 10, WorldSize));
 
         Filter.mesh = _mesh;
+
+        UpdateMaterialParameters();
     }
 
-    void Update()
+    private void OnValidate()
     {
-        Vector3[] vertices = _mesh.vertices;
-        Vector3[] normals = _mesh.normals;
-        for (int z = 0; z < VertexSize; z++)
+        if (Application.isPlaying)
         {
-            for (int x = 0; x < VertexSize; x++)
-            {
-                int index = z * VertexSize + x;
-                Vector3 initial = GetVertexWorldPosition(x, z);
-                vertices[index] = TransformVertex(initial, Time.time);
-                normals[index] = GetVertexNormal(initial, vertices[index], Time.time);
-            }
+            UpdateMaterialParameters();
         }
-        _mesh.vertices = vertices;
-        _mesh.normals = normals;
+    }
+
+    private void Update()
+    {
+        if (ResendShaderValues && Time.time - _lastSendTime > 3)
+        {
+            UpdateMaterialParameters();
+        }
     }
 
     private Vector3 TransformVertex(Vector3 vertex, float time)
@@ -98,7 +104,8 @@ public class Ocean : MonoBehaviour
             sumY += wave.Amplitude * Mathf.Sin(Vector3.Dot(wave.Frequency * wave.Direction, xz) + wave.PhaseConstant * time);
         }
 
-        return new Vector3(sumX, sumY, sumZ);
+        //return new Vector3(sumX, sumY, sumZ);
+        return vertex;
     }
 
     private Vector3 GetVertexNormal(Vector3 initial, Vector3 transformed, float time)
@@ -117,12 +124,33 @@ public class Ocean : MonoBehaviour
             sumY -= wave.Steepness * wa * s;
         }
 
-        return new Vector3(sumX, sumY, sumZ);
+        //return new Vector3(sumX, sumY, sumZ);
+        return Vector3.up;
     }
 
     private Vector3 GetVertexWorldPosition(int vertexX, int vertexZ)
     {
         return new Vector3(vertexX / VerticesPerUnit - WorldSize / 2, 0, vertexZ / VerticesPerUnit - WorldSize / 2);
+    }
+
+    private void UpdateMaterialParameters()
+    {
+        Material material = GetComponent<MeshRenderer>().material;
+
+        Vector4[] waveData = new Vector4[Waves.Length];
+        Vector4[] waveDirections = new Vector4[Waves.Length];
+        for (int i = 0; i < Waves.Length; i++)
+        {
+            WaveSettings wave = Waves[i];
+            waveData[i] = new Vector4(wave.Steepness, wave.Amplitude, wave.Frequency, wave.Speed);
+            waveDirections[i] = new Vector4(wave.Direction.x, wave.Direction.y, wave.Direction.z, wave.PhaseConstant);
+        }
+
+        material.SetInt("_WavesLength", Waves.Length);
+        material.SetVectorArray("_WavesData", waveData);
+        material.SetVectorArray("_WavesDirection", waveDirections);
+
+        _lastSendTime = Time.time;
     }
 
     [Serializable]
