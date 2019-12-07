@@ -33,7 +33,7 @@ public class Ocean : MonoBehaviour
         // x2: two triangles per square
         // x3: three array indices per triangle
         // x2: both sides of the triangles
-        int[] triangles = new int[(VertexSize - 1) * (VertexSize - 1) * 2 * 3 * 2];
+        int[] triangles = new int[(VertexSize - 1) * (VertexSize - 1) * 2 * 3];
         int nextTriangleIndex = 0;
         for (int z = 0; z < VertexSize; z++)
         {
@@ -54,13 +54,13 @@ public class Ocean : MonoBehaviour
                     triangles[nextTriangleIndex++] = index + VertexSize + 1;
 
 
-                    triangles[nextTriangleIndex++] = index;
-                    triangles[nextTriangleIndex++] = index + 1;
-                    triangles[nextTriangleIndex++] = index + VertexSize;
+                    //triangles[nextTriangleIndex++] = index;
+                    //triangles[nextTriangleIndex++] = index + 1;
+                    //triangles[nextTriangleIndex++] = index + VertexSize;
 
-                    triangles[nextTriangleIndex++] = index + 1;
-                    triangles[nextTriangleIndex++] = index + VertexSize + 1;
-                    triangles[nextTriangleIndex++] = index + VertexSize;
+                    //triangles[nextTriangleIndex++] = index + 1;
+                    //triangles[nextTriangleIndex++] = index + VertexSize + 1;
+                    //triangles[nextTriangleIndex++] = index + VertexSize;
                 }
             }
         }
@@ -149,6 +149,8 @@ public class Ocean : MonoBehaviour
         material.SetInt("_WavesLength", Waves.Length);
         material.SetVectorArray("_WavesData", waveData);
         material.SetVectorArray("_WavesDirection", waveDirections);
+
+        material.SetVector("_OceanPosition", new Vector4(transform.position.x, transform.position.y, transform.position.z));
 
         _lastSendTime = Time.time;
     }

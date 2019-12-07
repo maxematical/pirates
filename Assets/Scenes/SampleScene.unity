@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.44657892, g: 0.49641353, b: 0.5748163, a: 1}
+  m_IndirectSpecularColor: {r: 0.4465788, g: 0.4964134, b: 0.57481605, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -249,6 +249,26 @@ Transform:
   m_Father: {fileID: 765587204}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &509609044 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1173702418961526531, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
+--- !u!64 &509609045
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 509609044}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  serializedVersion: 3
+  m_Convex: 0
+  m_CookingOptions: 14
+  m_Mesh: {fileID: 6911245435811023445, guid: f1e645c94fe42534bab22bc03b1f9bb5, type: 3}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -322,7 +342,7 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0.000006742881}
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
@@ -333,13 +353,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
-  m_LocalRotation: {x: 0.38302222, y: 0.38302222, z: -0.17860618, w: 0.82139385}
+  m_LocalRotation: {x: -0.14454393, y: 0.8516508, z: -0.39713123, w: -0.30997548}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 50, y: 50, z: 0}
+  m_LocalEulerAnglesHint: {x: 50, y: 220, z: 0}
 --- !u!1 &765587200
 GameObject:
   m_ObjectHideFlags: 0
@@ -352,6 +372,7 @@ GameObject:
   - component: {fileID: 765587201}
   - component: {fileID: 765587205}
   - component: {fileID: 765587206}
+  - component: {fileID: 765587202}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -372,6 +393,40 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1.75, z: 3}
   m_Center: {x: 0, y: 0.5, z: 0.125}
+--- !u!114 &765587202
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765587200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2ec623341a026848a053639181040bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ScanHullBounds:
+    m_Center: {x: 0, y: -0.3, z: 0.2}
+    m_Extent: {x: 0.5, y: 0.2, z: 1.4}
+  SamplesResolution: 0.1
+  HullCollider: {fileID: 509609045}
+  RaycastLayer: Buoyancy Detection
+  _hullSamplePositions:
+  - {x: 0.4, y: 0.32545334, z: 0.000000007450581}
+  - {x: 0.40000004, y: 0.3258553, z: 0.10000003}
+  - {x: 0.40000004, y: 0.32628244, z: 0.19999999}
+  - {x: 0.39999998, y: 0.32664555, z: 0.3}
+  - {x: 0.4, y: 0.32702845, z: 0.4000001}
+  - {x: 0.4, y: 0.32765967, z: 0.49999988}
+  - {x: 0.4, y: 0.32852012, z: 0.59999996}
+  - {x: 0.4, y: 0.32833946, z: 0.7000001}
+  - {x: 0.4, y: 0.3226726, z: 0.79999995}
+  - {x: 0.4, y: 0.3039344, z: 0.8999999}
+  - {x: 0.4, y: 0.24631709, z: 0.9999998}
+  - {x: 0.4, y: 0.04533273, z: 1.0999999}
+  - {x: 0.29999998, y: 0.38952357, z: 1.3}
+  - {x: 0.0000000052582747, y: 0.007113278, z: 1.4999998}
+  - {x: 0.099999994, y: 0.075659335, z: 1.4999998}
 --- !u!4 &765587204
 Transform:
   m_ObjectHideFlags: 0
@@ -603,8 +658,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Filter: {fileID: 1059587824}
-  WorldSize: 30
-  VerticesPerUnit: 4
+  WorldSize: 100
+  VerticesPerUnit: 3
   Waves:
   - Steepness: 3
     Amplitude: 0.4
@@ -635,6 +690,11 @@ MonoBehaviour:
     Amplitude: 0.06
     Wavelength: 0.65
     DirectionXZ: {x: 1.2, y: 0.9}
+    Speed: 2.2
+  - Steepness: 0.05
+    Amplitude: 0.1
+    Wavelength: 1
+    DirectionXZ: {x: 0.1, y: 0.9}
     Speed: 2.2
   ResendShaderValues: 1
 --- !u!23 &1059587823
@@ -879,6 +939,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: caravel
+      objectReference: {fileID: 0}
+    - target: {fileID: 1173702418961526531, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+        type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}

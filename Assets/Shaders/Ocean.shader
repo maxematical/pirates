@@ -14,6 +14,8 @@ Shader "Custom/Ocean"
 		_FoamAngleMax("Foam Angle Max", float) = 6
 
 		_NormalMap("Normal Map", 2D) = "" {}
+		_NoiseMap("Noise", 2D) = "" {}
+		_Voronoi("Voronoi", 2D) = "" {}
 	}
 	SubShader
 	{
@@ -42,6 +44,7 @@ Shader "Custom/Ocean"
 			float3 worldPos;
 			float3 originalPos;
 			half3 worldRefl;
+			float crest;
 			INTERNAL_DATA
 		};
 
@@ -75,8 +78,11 @@ Shader "Custom/Ocean"
 		int _WavesLength = 0;
 		float4 _WavesData[WAVES_CAPACITY]; // steepness, amplitude, frequency, speed
 		float4 _WavesDirection[WAVES_CAPACITY]; // directionXYZ, phase constant
+		float4 _OceanPosition; // XYZ position of the ocean GameObject
 
 		sampler2D _NormalMap;
+		sampler2D _NoiseMap;
+		sampler2D _Voronoi;
 
 		//Add instancing support for this shader. You need to check Enable Instancing on materials that use the shader.
 		// See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
@@ -109,6 +115,8 @@ Shader "Custom/Ocean"
 			float3 xz = v.vertex.xyz;
 			xz.y = 0;
 
+			float crest = 0;
+
 			float4 pos = v.vertex;
 			pos.y = 0;
 			float3 normal = float3(0, 1, 0);
@@ -126,6 +134,10 @@ Shader "Custom/Ocean"
 				pos.x += steepness * amplitude * direction.x * cos(dot(frequency * direction, xz) + phaseConstant * time);
 				pos.z += steepness * amplitude * direction.z * cos(dot(frequency * direction, xz) + phaseConstant * time);
 				pos.y += amplitude * sin(dot(frequency * direction, xz) + phaseConstant * time);
+
+				crest += (i == 0) * (abs(pos.x - v.vertex.x) + abs(pos.z - v.vertex.z)) * (pos.y - v.vertex.y) / amplitude;
+				//crest += (i == 0) * sin(dot(frequency * direction, xz) + phaseConstant * time);
+				//crest -= (i == 1) * 0.5 * sin(dot(frequency * direction, xz) + phaseConstant * time);
 			}
 
 			for (i = 0; i < _WavesLength; i++)
@@ -146,17 +158,23 @@ Shader "Custom/Ocean"
 				normal.x -= direction.x * wa * c;
 				normal.z -= direction.z * wa * c;
 				normal.y -= steepness * wa * s;
-			}
 
+				if (i == 0) crest = 1 - normal.y;
+			}
+			float normalY = normalize(normal).y;
+			crest = saturate(pow(10 * (1 - normalY), 1)) * 2;
+
+			float4 normalUv = 0.05 * float4(xz.x, 0, xz.z, 0);
+			float3 normalMap = tex2Dlod(_NormalMap, normalUv);
+			//pos.y += normalMap.x;
+
+			// TODO find some way to do this without the if statement
+			// maybe lerp(pos, v.vertex, saturate(_WaveLength)) ?
 			if (_WavesLength == 0)
 			{
 				pos = v.vertex;
 				normal = v.normal;
 			}
-
-			float4 normalUv = 0.05 * float4(xz.x, 0, xz.z, 0);
-			float3 normalMap = tex2Dlod(_NormalMap, normalUv);
-			pos.y += normalMap.x;
 
 			v.vertex = pos;
 			v.normal = normal;
@@ -164,26 +182,54 @@ Shader "Custom/Ocean"
 			UNITY_INITIALIZE_OUTPUT(Input, toSurf);
 			toSurf.originalPos = xz;
 			toSurf.worldRefl = worldRefl;
+			toSurf.crest = saturate(crest);
+		}
+
+		inline fixed3 colorBlend(fixed3 a, fixed3 b)
+		{
+			float fac = step(3.0, dot(b, b));
+			return lerp(b, a, fac);
 		}
 
 		void surf(Input i, inout SurfaceOutput o)
 		{
+			float3 objectPos = i.worldPos - _OceanPosition;
+
 			//o.Albedo = tex2D(_NormalMap, float2(i.worldPos.x, i.worldPos.z));
 			//o.Albedo = _BaseColor;
 
 			//float2 normalUv = float2(0.25 * i.originalPos.x + _Time[1] * 0.05, 0.25 * i.originalPos.z - _Time[1] * 0.02);
-			float2 normalUv = 0.25 * i.originalPos.xz;
-			normalUv.x += i.worldPos.y * 0.2;
+			float2 normalUv = 0.02 * (i.originalPos.xz + i.worldPos.xz) * 0.5;
+			normalUv = normalUv.yx;
+			/*normalUv.x += i.worldPos.y * 0.2;
+			normalUv.x += _Time[1] * 0.3;
+			normalUv.y += _Time[1] * -0.14;*/
 			
-			float3 geomNormal = WorldNormalVector(i, o.Normal);
-			float3 normalMap = tex2D(_NormalMap, normalUv) - 0*float3(0.5, 0, 0.5);
-			float3 normal = geomNormal + normalMap * 0.0; // note: for some reason normalizing this makes it weird
-			o.Normal = normal;
+			float3 normalMap = tex2D(_NoiseMap, normalUv) - float3(0.5, 0, 0.5);
+			normalMap.y = 0;
+			normalMap = normalize(normalMap);
+			o.Normal += normalMap * 0.25;
 
 			half4 skyData = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, i.worldRefl);
 			half3 skyColor = DecodeHDR(skyData, unity_SpecCube0_HDR);
 
-			o.Albedo = (skyColor * 1 + _BaseColor * 2) / 3;
+			float3 base = lerp(_BaseColor, _EdgeColor, objectPos.y - 0.65);
+
+			float2 voronoiUv1 = (i.originalPos.xz * 0.05 * 0.75 + i.worldPos.xz * 0.05 * 0.25) + _Time[1] * 0* float2(0.8, 1.1);
+			float2 voronoiUv2 = (i.originalPos.xz * 0.008 + i.worldPos.xz * 0.04) + float2(0.5, 0.4) + _Time[0] *0 * float2(0.8, 1.1);
+			float3 voronoi1 = tex2D(_Voronoi, voronoiUv1 * 0.75) * 0.5;
+			float3 voronoi2 = tex2D(_Voronoi, voronoiUv2 * 0.75) * 0.5;
+			//voronoi = saturate(voronoi / 0.5) * 0.5;
+			//voronoi = saturate(2.0 * voronoi - 0.15) * 0.5;
+			//if (voronoi > 1.0) {voronoi = 0.0;}
+
+			//o.Albedo = (skyColor * 1 + base * 2) / 3 + 0.5 * (voronoi1 + voronoi2);
+
+			float foamAmount = saturate(0.5 * (objectPos.y - 0.85) + 0.5 * (2 - .85)) + 0.2;// * voronoi;
+			o.Albedo = lerp(_BaseColor, 1.0, foamAmount * voronoi1 * 0.5 + (foamAmount -0* 0.2) * voronoi2 * 0.5 * 8);
+			//o.Albedo = foamAmount * voronoi * 3;
+			//o.Albedo += i.crest;
+			//o.Albedo = i.crest;
 		}
 
 		half4 LightingSubsurf(SurfaceOutput s, half3 lightDir, half3 viewDir, half atten)
@@ -195,26 +241,25 @@ Shader "Custom/Ocean"
 			float3 normal = s.Normal;
 
 			// lambert lighting
-			half NdotL = dot(normal, lightDir);
+			half NdotL = saturate(dot(normal, lightDir)) * 0.45;
 
 			// specular lighting
-			float specularity = 256.0;
+			float specularity = 48.0;
 			float3 H = normalize(lightDir + viewDir);
-			float specularIntensity = pow(saturate(dot(normal, H)), specularity) * 0.2;
+			float specularIntensity = pow(saturate(dot(H, normal)), specularity) * 0.2;
 
 			// subsurface lighting
 			half VdotL = dot(viewDir, -(lightDir + normal * delta));
-			half IBack = pow(saturate(VdotL), 2) * 1.0;
+			half IBack = pow(saturate(VdotL), 2) * 0.75;
 
+			// combine lighting and return result
 			half4 c;
-			c.rgb = s.Albedo * _LightColor0.rgb * (NdotL * atten) +
+			c.rgb = s.Albedo * _LightColor0.rgb * NdotL * atten +
 				_LightColor0.rgb * specularIntensity * atten +
 				s.Albedo * _LightColor0.rgb * atten * IBack;
 			c.a = s.Alpha;
 
-			return c * 0.75;
-
-//			return 0;
+			return c;
 		}
 
 		// This is UNUSED right now
