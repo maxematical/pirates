@@ -30,6 +30,7 @@ public class ShipBuoyancyEditor : Editor
         EditorGUI.BeginDisabledGroup(disableComputeSamples);
         if (GUILayout.Button("Compute Samples"))
         {
+            Undo.RecordObject(script, "Compute Hull Samples");
             script.ComputeHullSamples();
         }
         EditorGUI.EndDisabledGroup();
