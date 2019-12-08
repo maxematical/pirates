@@ -226,7 +226,7 @@ Shader "Custom/Ocean"
 			//o.Albedo = (skyColor * 1 + base * 2) / 3 + 0.5 * (voronoi1 + voronoi2);
 
 			float foamAmount = saturate(0.5 * (objectPos.y - 0.85) + 0.5 * (2 - .85)) + 0.2;// * voronoi;
-			o.Albedo = lerp(_BaseColor, 1.0, foamAmount * voronoi1 * 0.5 + (foamAmount -0* 0.2) * voronoi2 * 0.5 * 8);
+			o.Albedo = lerp(_BaseColor, 1.0, foamAmount * voronoi1 * 0.5 * 5 + foamAmount * voronoi2 * 0.5 * 6);
 			//o.Albedo = foamAmount * voronoi * 3;
 			//o.Albedo += i.crest;
 			//o.Albedo = i.crest;
