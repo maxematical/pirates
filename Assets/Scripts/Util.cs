@@ -31,6 +31,13 @@ public class Util
         return Mathf.Abs(Clamp180(here - there));
     }
 
+    public static float ClosestAngle(float here, float one, float two)
+    {
+        float dist1 = AngleDist(here, one);
+        float dist2 = AngleDist(here, two);
+        return dist1 <= dist2 ? one : two;
+    }
+
     /// <summary>
     /// Caps the given number such that its absolute value will not exceed the maximum.
     /// </summary>

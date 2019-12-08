@@ -20,9 +20,8 @@ public class ShipControl : MonoBehaviour
         transform.position += velocity * Time.fixedDeltaTime;
     }
 
-    public Vector3 CalculateCannonballTrajectory(Vector3 spawnPos, Vector3 target, float speed, float gravity)
+    public static Vector3 CalculateCannonballTrajectory(Vector3 position, Vector3 spawnPos, Vector3 target, float speed, float gravity)
     {
-        Vector3 position = this.transform.position;
         float yawAngle = -Mathf.Atan2(target.z - position.z, target.x - position.x) * Mathf.Rad2Deg + 90;
 
         // We want the cannonball to land on a specific spot on the map

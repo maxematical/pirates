@@ -87,6 +87,10 @@ public class PlayerControl : ShipControl
 
         // Animate model
         Caravel.TargetRudderTilt = rotateInput * 30;
+        Caravel.TargetAimPos = GetMouseoverPosition() ?? Vector3.zero;
+        Caravel.CannonballSpeed = CannonballSpeed;
+        Caravel.CannonballGravity = CannonballGravity;
+        Caravel.CannonMaxFiringAngle = MaxFiringAngle;
     }
 
     private void HandleFireInput()
@@ -112,11 +116,13 @@ public class PlayerControl : ShipControl
                     return;
                 }
 
-                GameObject spawner = relativeAngle <= 0 ? CannonballSpawnL : CannonballSpawnR;
+                GameObject spawner = relativeAngle <= 0 ?
+                    Caravel.GetNextLeftCannonSpawnPos() :
+                    Caravel.GetNextRightCannonSpawnPos();
                 Vector3 spawnPos = spawner.transform.position;
 
                 GameObject instantiated = Instantiate(CannonballPrefab, spawnPos, Quaternion.identity);
-                Vector3 cannonballVelocity = CalculateCannonballTrajectory(spawnPos, target, CannonballSpeed, CannonballGravity) + this.Velocity;
+                Vector3 cannonballVelocity = CalculateCannonballTrajectory(transform.position, spawnPos, target, CannonballSpeed, CannonballGravity) + this.Velocity;
 
                 Cannonball cannonball = instantiated.GetComponent<Cannonball>();
                 cannonball.Velocity = cannonballVelocity;
