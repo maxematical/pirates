@@ -90,7 +90,7 @@ public class Ocean : MonoBehaviour
         }
     }
 
-    private Vector3 TransformVertex(Vector3 vertex, float time)
+    public Vector3 TransformVertex(Vector3 vertex, float time)
     {
         Vector3 xz = new Vector3(vertex.x, 0, vertex.z);
 
@@ -104,8 +104,7 @@ public class Ocean : MonoBehaviour
             sumY += wave.Amplitude * Mathf.Sin(Vector3.Dot(wave.Frequency * wave.Direction, xz) + wave.PhaseConstant * time);
         }
 
-        //return new Vector3(sumX, sumY, sumZ);
-        return vertex;
+        return new Vector3(sumX, sumY, sumZ);
     }
 
     private Vector3 GetVertexNormal(Vector3 initial, Vector3 transformed, float time)
