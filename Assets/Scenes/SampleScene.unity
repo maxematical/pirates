@@ -494,6 +494,7 @@ GameObject:
   - component: {fileID: 765587206}
   - component: {fileID: 765587202}
   - component: {fileID: 765587203}
+  - component: {fileID: 765587207}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -521,7 +522,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 765587200}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d2ec623341a026848a053639181040bc, type: 3}
   m_Name: 
@@ -714,6 +715,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BaseHealth: 300
+--- !u!114 &765587207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765587200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cdde2c2ce8cea9648afadf2444abcb17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _Ocean: {fileID: 1059587822}
+  _HullPhysicsMesh: {fileID: -3382551629729668921, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  _HullPhysicsObject: {fileID: 1330306992}
 --- !u!1 &806464976
 GameObject:
   m_ObjectHideFlags: 0
@@ -1027,6 +1044,12 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 2013807524}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1330306992 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4565211952562884219, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1739028058
 GameObject:
   m_ObjectHideFlags: 0
@@ -1240,6 +1263,21 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1173702418961526531, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4565211952562884219, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7956839076154134942, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.7174593
+      objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1309,11 +1347,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalScale.x
       value: 0.35
-      objectReference: {fileID: 0}
-    - target: {fileID: -7956839076154134942, guid: f1e645c94fe42534bab22bc03b1f9bb5,
-        type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.7174593
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f1e645c94fe42534bab22bc03b1f9bb5, type: 3}
