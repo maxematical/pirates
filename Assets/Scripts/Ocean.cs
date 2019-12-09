@@ -94,6 +94,11 @@ public class Ocean : MonoBehaviour
     {
         Vector3 xz = new Vector3(vertex.x, 0, vertex.z);
 
+        // TODO Actually calculate the vertex position, right now we are acting as if the ocean is a flat plane (which it is not).
+        // The actual calculation is somewhat computationally expensive if we are running it multiple times for all triangles on
+        // the hull, so in the future we should find some way to optimize/cache this data.
+        return xz;
+
         float sumX = vertex.x;
         float sumZ = vertex.z;
         float sumY = 0;

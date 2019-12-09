@@ -8,6 +8,74 @@ public class MeshBuoyancy : MonoBehaviour
     public Ocean _Ocean;
     public Mesh _HullPhysicsMesh;
     public GameObject _HullPhysicsObject;
+    public Rigidbody _Rigidbody;
+
+    private Vector3[] _meshVertices;
+    private Vector3[] _meshNormals;
+    private int[] _meshTriangles;
+
+    private void Start()
+    {
+        _meshVertices = _HullPhysicsMesh.vertices;
+        _meshNormals = _HullPhysicsMesh.normals;
+        _meshTriangles = _HullPhysicsMesh.triangles;
+    }
+
+    private void FixedUpdate()
+    {
+        Transform hullTransform = _HullPhysicsObject.transform;
+        float time = Application.isPlaying ? Time.time : 0;
+
+        float density = 0.25f;
+        float g = 9.81f;
+
+        for (int i = 0; i < _meshTriangles.Length; i += 3)
+        {
+            int i1 = _meshTriangles[i];
+            int i2 = _meshTriangles[i + 1];
+            int i3 = _meshTriangles[i + 2];
+            Vector3 v1 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(_meshVertices[i1]);
+            Vector3 v2 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(_meshVertices[i2]);
+            Vector3 v3 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(_meshVertices[i3]);
+            Vector3 center = (v1 + v2 + v3) / 3f;
+
+            Vector3 n1 = hullTransform.rotation * _meshNormals[i1];
+            Vector3 n2 = hullTransform.rotation * _meshNormals[i2];
+            Vector3 n3 = hullTransform.rotation * _meshNormals[i3];
+            Vector3 normal = (n1 + n2 + n3).normalized;
+
+            bool hasIntersectA;
+            Vector3 intersectA1;
+            Vector3 intersectA2;
+            Vector3 intersectA3;
+            bool hasIntersectB;
+            Vector3 intersectB1;
+            Vector3 intersectB2;
+            Vector3 intersectB3;
+            ComputeTriangleWaterIntersection(v1, v2, v3, time, normal,
+                out hasIntersectA, out intersectA1, out intersectA2, out intersectA3,
+                out hasIntersectB, out intersectB1, out intersectB2, out intersectB3);
+
+            normal = Vector3.down;
+            if (hasIntersectA)
+            {
+                Vector3 centerA = (intersectA1 + intersectA2 + intersectA3) / 3f;
+                float waterHeight = ComputeWaterHeight(centerA, time) - centerA.y;
+                Vector3 force = -density * g * waterHeight * normal;
+                force.x = force.z = 0;
+                _Rigidbody.AddForceAtPosition(force, centerA); // TODO calculate point at which to apply force
+            }
+
+            if (hasIntersectB)
+            {
+                Vector3 centerB = (intersectB1 + intersectB2 + intersectB3) / 3f;
+                float waterHeight = ComputeWaterHeight(centerB, time);
+                Vector3 force = -density * g * waterHeight * normal;
+                force.x = force.z = 0;
+                _Rigidbody.AddForceAtPosition(force, centerB); // TODO calculate point at which to apply force
+            }
+        }
+    }
 
     private void OnDrawGizmosSelected()
     {
@@ -47,6 +115,8 @@ public class MeshBuoyancy : MonoBehaviour
             ComputeTriangleWaterIntersection(v1, v2, v3, time, triangleNormal,
                 out hasIntersectA, out intersectA1, out intersectA2, out intersectA3,
                 out hasIntersectB, out intersectB1, out intersectB2, out intersectB3);
+
+            Gizmos.DrawRay((v1 + v2 + v3) / 3f, triangleNormal * 0.25f);
 
             if (hasIntersectA || hasIntersectB)
             {
