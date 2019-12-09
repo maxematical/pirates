@@ -162,6 +162,56 @@ public class MeshBuoyancy : MonoBehaviour
                 Gizmos.DrawMesh(toDraw);
             }
         }
+
+        {
+            Gizmos.color = Color.magenta;
+            Vector3[] triangle = new Vector3[]
+            {
+                new Vector3(4, 4, 4),
+                new Vector3(4, 5, 3),
+                new Vector3(3, 4, 4)
+                //new Vector3(-4, 4, 4),
+                //new Vector3(-4, 6, 2),
+                //new Vector3(-3, 4, 4)
+            };
+            Vector3 triangleNormal = GetNormal(triangle[0], triangle[1], triangle[2]);
+            {
+                Mesh toDraw = new Mesh();
+                toDraw.vertices = triangle;
+                toDraw.normals = new Vector3[] { triangleNormal, triangleNormal, triangleNormal };
+                toDraw.triangles = new int[] { 0, 1, 2 };
+                Gizmos.DrawMesh(toDraw);
+
+                Mesh toDrawBack = new Mesh();
+                toDrawBack.vertices = triangle;
+                toDrawBack.normals = new Vector3[] { -triangleNormal, -triangleNormal, -triangleNormal };
+                toDrawBack.triangles = new int[] { 2, 1, 0 };
+                Gizmos.DrawMesh(toDrawBack);
+            }
+            {
+                Gizmos.color = Color.cyan;
+                Quaternion triangleTransform = Quaternion.FromToRotation(triangleNormal, Vector3.forward);
+                Vector3[] transformedTriangle = triangle.Select(x => triangleTransform * x).ToArray();
+                Vector3 transformedNormal = GetNormal(transformedTriangle[0], transformedTriangle[1], transformedTriangle[2]);
+
+                Mesh toDraw = new Mesh();
+                toDraw.vertices = transformedTriangle;
+                toDraw.normals = new Vector3[] { transformedNormal, transformedNormal, transformedNormal };
+                toDraw.triangles = new int[] { 0, 1, 2 };
+                Gizmos.DrawMesh(toDraw);
+
+                Mesh toDrawBack = new Mesh();
+                toDrawBack.vertices = transformedTriangle;
+                toDrawBack.normals = new Vector3[] { -transformedNormal, -transformedNormal, -transformedNormal };
+                toDrawBack.triangles = new int[] { 2, 1, 0 };
+                Gizmos.DrawMesh(toDrawBack);
+
+                Vector3 hydroforceCenter;
+                GetTriangleCenters(transformedTriangle[0], transformedTriangle[1], transformedTriangle[2], out hydroforceCenter, out _, out _);
+                Gizmos.DrawSphere(hydroforceCenter, 0.2f);
+                Gizmos.DrawSphere(Quaternion.Inverse(triangleTransform) * hydroforceCenter, 0.2f);
+            }
+        }
     }
 
     public float ComputeWaterHeight(Vector3 position, float time)
@@ -186,37 +236,11 @@ public class MeshBuoyancy : MonoBehaviour
         float hM = M.y - ComputeWaterHeight(M, time);
         float hH = H.y - ComputeWaterHeight(H, time);
 
-        //if (hL <= 0 || true)
-        //{
-        //    hasIntersectA = true;
-        //    intersectA3 = H;
-        //    intersectA1 = L;
-        //    intersectA2 = M;
-        //    hasIntersectB = false;
-        //    intersectB1 = Vector3.zero;
-        //    intersectB2 = Vector3.zero;
-        //    intersectB3 = Vector3.zero;
-        //    //return;
-        //} else
-        //{
-        //    hasIntersectA = false;
-        //    intersectA3 = Vector3.zero;
-        //    intersectA1 = Vector3.zero;
-        //    intersectA2 = Vector3.zero;
-        //    hasIntersectB = false;
-        //    intersectB1 = Vector3.zero;
-        //    intersectB2 = Vector3.zero;
-        //    intersectB3 = Vector3.zero;
-        //}
-
-        // Case 1: H is above the water but M and L are below
         if (hL <= 0 && hM <= 0 && hH >= 0)
         {
+            // Case 1: One vertex above the water
             float tM = -hM / (hH - hM);
             float tL = -hL / (hH - hL);
-
-            // IM - M = tM * (H - M)
-            //
 
             Vector3 IM = M + tM * (H - M);
             Vector3 IL = L + tL * (H - L);
@@ -229,13 +253,10 @@ public class MeshBuoyancy : MonoBehaviour
             intersectB1 = IM;
             intersectB2 = L;
             intersectB3 = IL;
-
-            //intersectA1 = L;
-            //intersectA2 = M;
-            //intersectA3 = H;
         }
         else if (hL <= 0 && hM >= 0 && hL >= 0)
         {
+            // Case 2: Two vertices above the water
             float tM = -hL / (hM - hL);
             float tH = -hL / (hH - hL);
 
@@ -253,10 +274,11 @@ public class MeshBuoyancy : MonoBehaviour
         }
         else if (hL <= 0 && hM <= 0 && hL <= 0)
         {
+            // Case 3: All vertices below the water (completely submerged)
             hasIntersectA = true;
-            intersectA1 = H;
-            intersectA2 = L;
-            intersectA3 = M;
+            intersectA1 = L;
+            intersectA2 = M;
+            intersectA3 = H;
             hasIntersectB = false;
             intersectB1 = Vector3.zero;
             intersectB2 = Vector3.zero;
@@ -264,6 +286,7 @@ public class MeshBuoyancy : MonoBehaviour
         }
         else
         {
+            // Case 4: All vertices above the water (completely dry)
             hasIntersectA = false;
             intersectA1 = Vector3.zero;
             intersectA2 = Vector3.zero;
@@ -306,5 +329,61 @@ public class MeshBuoyancy : MonoBehaviour
         Vector3 v21 = vertex2 - vertex1;
         Vector3 v31 = vertex3 - vertex1;
         return Vector3.Cross(v21, v31).normalized;
+    }
+
+    private void GetTriangleCenters(Vector3 vertex1, Vector3 vertex2, Vector3 vertex3,
+        out Vector3 centerA,
+        out bool hasCenterB, out Vector3 centerB)
+    {
+        // We can proceed if there is a horizontal edge for the triangle. (I.e. two vertices have the same y-position).
+        // Otherwise, we will split the triangle into two different triangles such that they both have one
+        // horizontal edge.
+        if (vertex1.y == vertex2.y || vertex2.y == vertex3.y || vertex1.y == vertex3.y)
+        {
+            float y0 = Mathf.Max(vertex1.y, vertex2.y, vertex3.y);
+            float y = Mathf.Min(vertex1.y, vertex2.y, vertex3.y);
+            float h = y0 - y;
+
+            var (L, M, H) = SortByHeight(vertex1, vertex2, vertex3);
+
+            // The base is lower than the lone vertex if the 2 lowest vertices have the same vertical position
+            bool isBaseLower = L.y == M.y;
+
+            float tc;
+            float bMinusA;
+            if (isBaseLower)
+            {
+                tc = (4 * y0 + 3 * h) / (6 * y0 + 4 * h);
+                bMinusA = (M - L).magnitude;
+
+                centerA = Vector3.Lerp(H, 0.5f * (L + M), tc);
+            }
+            else
+            {
+                tc = (2 * y0 + h) / (6 * y0 + 2 * h);
+                bMinusA = (H - M).magnitude;
+
+                centerA = Vector3.Lerp(0.5f * (H + M), L, tc);
+            }
+
+            hasCenterB = false;
+            centerB = Vector3.zero;
+        }
+        else
+        {
+            // Split the triangle into two sub-triangles, such that each sub-triangle has one horizontal base
+            centerA = Vector3.one * 1000;
+            hasCenterB = false;
+            centerB = Vector3.zero;
+        }
+    }
+
+    private (Vector3, Vector3, Vector3) SortByHeight(Vector3 point1, Vector3 point2, Vector3 point3)
+    {
+        List<Vector3> sorted = new Vector3[] { point1, point2, point3 }.OrderBy(v => v.y).ToList();
+        Vector3 L = sorted[0];
+        Vector3 M = sorted[1];
+        Vector3 H = sorted[2];
+        return (L, M, H);
     }
 }
