@@ -9,6 +9,7 @@ public class AiControl : ShipControl
     public AiSettings Settings;
 
     public GameObject CannonballPrefab;
+    public CaravelModelController Caravel;
 
     public float TimeUntilReloaded { get; set; }
 
@@ -66,6 +67,13 @@ public class AiControl : ShipControl
 
         // Change state to next
         _state = nextState;
+
+        // Animate model
+        Caravel.TargetRudderTilt = 0;
+        Caravel.TargetAimPos = _helper.TargetPos;
+        Caravel.CannonballSpeed = Settings.CannonballSpeed;
+        Caravel.CannonballGravity = Settings.CannonballGravity;
+        Caravel.CannonMaxFiringAngle = Settings.CannonAngle;
     }
 
     private void OnDrawGizmos()

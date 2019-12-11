@@ -59,42 +59,45 @@ public class CaravelModelController : MonoBehaviour
         Rudder.transform.rotation = Quaternion.AngleAxis(_rudderTilt, RudderAxis.right) * _rudderInitialRotation;
 
         // Update cannons
-        foreach (CannonSettings cannonSettings in Cannons)
+        if (TargetAimPos != Vector3.zero)
         {
-            GameObject barrel = cannonSettings.Barrel;
-            GameObject spawnPos = cannonSettings.SpawnPos;
-            Quaternion initialRotation = cannonSettings.InitialRotation;
-            Quaternion initialBaseRotation = cannonSettings.InitialBaseRotation;
-
-            initialBaseRotation = Quaternion.Euler(initialBaseRotation.eulerAngles.x, 0, initialBaseRotation.eulerAngles.z);
-
-            Vector3 trajectory = ShipControl.CalculateCannonballTrajectory(transform.position,
-                spawnPos.transform.position, TargetAimPos, CannonballSpeed, CannonballGravity);
-            Quaternion trajectoryQuaternion = Quaternion.LookRotation(trajectory, Vector3.up);
-            float yaw = trajectoryQuaternion.eulerAngles.y;
-            float pitch = trajectoryQuaternion.eulerAngles.x;
-
-            // Ensure the yaw angle isn't too far to either side
-            float relativeYaw = Util.Clamp180(yaw - transform.rotation.eulerAngles.y);
-
-            float clampMin = CannonMaxFiringAngle;
-            float clampMax = 180 - CannonMaxFiringAngle;
-            if (cannonSettings.IsRightSide)
+            foreach (CannonSettings cannonSettings in Cannons)
             {
-                float oldMin = clampMin;
-                clampMin = -clampMax;
-                clampMax = -oldMin;
-            }
-            if (relativeYaw < clampMin || relativeYaw > clampMax)
-            {
-                // relativeYaw = Util.ClosestAngle(relativeYaw, clampMin, clampMax);
-                continue;
-            }
-            yaw = relativeYaw + transform.rotation.eulerAngles.y - 90;
+                GameObject barrel = cannonSettings.Barrel;
+                GameObject spawnPos = cannonSettings.SpawnPos;
+                Quaternion initialRotation = cannonSettings.InitialRotation;
+                Quaternion initialBaseRotation = cannonSettings.InitialBaseRotation;
 
-            Quaternion baseRotation = Quaternion.AngleAxis(yaw, Vector3.up) * initialBaseRotation;
-            barrel.transform.localRotation = Quaternion.AngleAxis(-pitch, Vector3.right) * initialRotation;
-            cannonSettings.Base.transform.localRotation = baseRotation;
+                initialBaseRotation = Quaternion.Euler(initialBaseRotation.eulerAngles.x, 0, initialBaseRotation.eulerAngles.z);
+
+                Vector3 trajectory = ShipControl.CalculateCannonballTrajectory(transform.position,
+                    spawnPos.transform.position, TargetAimPos, CannonballSpeed, CannonballGravity);
+                Quaternion trajectoryQuaternion = Quaternion.LookRotation(trajectory, Vector3.up);
+                float yaw = trajectoryQuaternion.eulerAngles.y;
+                float pitch = trajectoryQuaternion.eulerAngles.x;
+
+                // Ensure the yaw angle isn't too far to either side
+                float relativeYaw = Util.Clamp180(yaw - transform.rotation.eulerAngles.y);
+
+                float clampMin = CannonMaxFiringAngle;
+                float clampMax = 180 - CannonMaxFiringAngle;
+                if (cannonSettings.IsRightSide)
+                {
+                    float oldMin = clampMin;
+                    clampMin = -clampMax;
+                    clampMax = -oldMin;
+                }
+                if (relativeYaw < clampMin || relativeYaw > clampMax)
+                {
+                    // relativeYaw = Util.ClosestAngle(relativeYaw, clampMin, clampMax);
+                    continue;
+                }
+                yaw = relativeYaw + transform.rotation.eulerAngles.y - 90;
+
+                Quaternion baseRotation = Quaternion.AngleAxis(yaw, Vector3.up) * initialBaseRotation;
+                barrel.transform.localRotation = Quaternion.AngleAxis(-pitch, Vector3.right) * initialRotation;
+                cannonSettings.Base.transform.localRotation = baseRotation;
+            }
         }
     }
 
