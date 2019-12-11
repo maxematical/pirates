@@ -234,6 +234,12 @@ Shader "Custom/Ocean"
 
 		half4 LightingSubsurf(SurfaceOutput s, half3 lightDir, half3 viewDir, half atten)
 		{
+			// TODO: Add different shading for ocean foam
+			// 1) define custom version of SurfaceOutput and use that instead throughout the file
+			// 2) create field in custom SurfaceOutput called worldPos and set it in the surface shader
+			// 3) use worldPos in lighting function to determine the amount of foam at the position
+			// 4) lerp normal water lighting with foam lighting depending on amount of foam here
+
 			float delta = 0.8; // can be anywhere between 0 - 1
 
 			/*float3 normalMap = tex2D(_NormalMap, float2(i.worldPos.x, i.worldPos.z));

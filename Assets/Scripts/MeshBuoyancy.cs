@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -8,6 +7,7 @@ public class MeshBuoyancy : MonoBehaviour
     private const bool DEBUG_NORMALS = false;
     private const bool DEBUG_SUBMERGED_TRIANGLES = true;
     private const bool DEBUG_SUBMERGED_CENTERS = true;
+    private const bool LOG_UPDATE_TIME = false;
 
     public Ocean _Ocean;
     public Mesh _HullPhysicsMesh;
@@ -27,11 +27,16 @@ public class MeshBuoyancy : MonoBehaviour
 
     private void FixedUpdate()
     {
+        float startTime = Time.realtimeSinceStartup;
+
         Transform hullTransform = _HullPhysicsObject.transform;
         float time = Application.isPlaying ? Time.time : 0;
 
         float density = 0.25f;
         float g = 9.81f;
+
+        float dampingConstant = 15f;
+        Vector3 dampingVector = -_Rigidbody.velocity.sqrMagnitude * _Rigidbody.velocity * dampingConstant * Time.deltaTime;
 
         for (int i = 0; i < _meshTriangles.Length; i += 3)
         {
@@ -72,24 +77,46 @@ public class MeshBuoyancy : MonoBehaviour
                 force1.x = force1.z = 0;
                 _Rigidbody.AddForceAtPosition(force1 * area1, center1);
 
+                _Rigidbody.AddForceAtPosition(dampingVector * area1, center1);
+
                 if (has2)
                 {
                     float waterHeight2 = ComputeWaterHeight(center2, time) - center2.y;
                     Vector3 force2 = -density * g * waterHeight2 * normal;
                     force2.x = force2.z = 0;
                     _Rigidbody.AddForceAtPosition(force2 * area2, center2);
+
+                    _Rigidbody.AddForceAtPosition(dampingVector * area2, center2);
                 }
             }
 
             if (hasIntersectB)
             {
-                Vector3 centerB = (intersectB1 + intersectB2 + intersectB3) / 3f;
-                float waterHeight = ComputeWaterHeight(centerB, time);
-                Vector3 force = -density * g * waterHeight * normal;
-                force.x = force.z = 0;
-                _Rigidbody.AddForceAtPosition(force, centerB); // TODO calculate point at which to apply force
+                GetTriangleCenters(intersectB1, intersectB2, intersectB3, time,
+                    out Vector3 center1, out float area1,
+                    out bool has2, out Vector3 center2, out float area2);
+
+                float waterHeight1 = ComputeWaterHeight(center1, time) - center1.y;
+                Vector3 force1 = -density * g * waterHeight1 * normal;
+                force1.x = force1.z = 0;
+                _Rigidbody.AddForceAtPosition(force1 * area1, center1);
+
+                _Rigidbody.AddForceAtPosition(dampingVector * area1, center1);
+
+                if (has2)
+                {
+                    float waterHeight2 = ComputeWaterHeight(center2, time) - center2.y;
+                    Vector3 force2 = -density * g * waterHeight2 * normal;
+                    force2.x = force2.z = 0;
+                    _Rigidbody.AddForceAtPosition(force2 * area2, center2);
+
+                    _Rigidbody.AddForceAtPosition(dampingVector * area2, center2);
+                }
             }
         }
+
+        if (LOG_UPDATE_TIME)
+            Debug.Log("Time taken to perform fixed update: " + ((Time.realtimeSinceStartup - startTime) * 1000) + "ms");
     }
 
     private void OnDrawGizmosSelected()
@@ -108,7 +135,7 @@ public class MeshBuoyancy : MonoBehaviour
         {
             Gizmos.color = Color.blue;
             int i1 = triangles[i];
-            int i2 = triangles[i + 1];  
+            int i2 = triangles[i + 1];
             int i3 = triangles[i + 2];
             Vector3 v1 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(vertices[i1]);
             Vector3 v2 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(vertices[i2]);
@@ -321,7 +348,7 @@ public class MeshBuoyancy : MonoBehaviour
             intersectB2 = Vector3.zero;
             intersectB3 = Vector3.zero;
         }
-        
+
         // The last thing we need to do is ensure the vertices are in the right order (counterclockwise)
         // If they're in the wrong order, when we try to render the triangle(s) for debug purposes, the triangle would
         // only display from the opposite side we want it to
@@ -356,6 +383,21 @@ public class MeshBuoyancy : MonoBehaviour
         return Vector3.Cross(v21, v31).normalized;
     }
 
+    /// <summary>
+    /// Calculates the center(s) of the hydroforce(s) acting on the triangle defined by the given three points.
+    /// There may be one or two forces acting upon the triangle, depending on whether it has a horizontal base or not.
+    /// <para>
+    /// This performs a rotation on the vertices, so it is not necessary for the vertices to lie on the XY plane.
+    /// </para>
+    /// </summary>
+    /// <param name="vertex1">the first vertex of the triangle</param>
+    /// <param name="vertex2">the second vertex of the triangle</param>
+    /// <param name="vertex3">the third vertex of the triangle</param>
+    /// <param name="centerA">the center of the first force acting on the triangle</param>
+    /// <param name="areaA">the area for which the first force is being applied</param>
+    /// <param name="hasCenterB">whether there is a second force on the triangle</param>
+    /// <param name="centerB">the center of the second force acting on the triangle (if it exists)</param>
+    /// <param name="areaB">the area for which the second force is being applied (if it exists)</param>
     private void GetTriangleCenters(Vector3 vertex1, Vector3 vertex2, Vector3 vertex3, float time,
         out Vector3 centerA, out float areaA,
         out bool hasCenterB, out Vector3 centerB, out float areaB)
@@ -364,21 +406,33 @@ public class MeshBuoyancy : MonoBehaviour
         Quaternion q = Quaternion.FromToRotation(normal, Vector3.forward);
         Quaternion qInv = Quaternion.Inverse(q);
 
-        GetTriangleCenters2(q * vertex1, q * vertex2, q * vertex3, out centerA, out areaA, out hasCenterB, out centerB, out areaB);
+        GetTriangleCentersXY(q * vertex1, q * vertex2, q * vertex3, out centerA, out areaA, out hasCenterB, out centerB, out areaB);
         centerA = qInv * centerA;
         centerB = qInv * centerB;
     }
 
-    private void GetTriangleCenters2(Vector3 vertex1, Vector3 vertex2, Vector3 vertex3,
+    /// <summary>
+    /// Assuming the vertices lie on the XY plane, calculates the center(s) of the hydroforce(s) acting on the triangle defined by the given three points.
+    /// There may be one or two forces acting upon the triangle, depending on whether it has a horizontal base or not.
+    /// </summary>
+    /// <param name="vertex1">the first vertex of the triangle</param>
+    /// <param name="vertex2">the second vertex of the triangle</param>
+    /// <param name="vertex3">the third vertex of the triangle</param>
+    /// <param name="centerA">the center of the first force acting on the triangle</param>
+    /// <param name="areaA">the area for which the first force is being applied</param>
+    /// <param name="hasCenterB">whether there is a second force on the triangle</param>
+    /// <param name="centerB">the center of the second force acting on the triangle (if it exists)</param>
+    /// <param name="areaB">the area for which the second force is being applied (if it exists)</param>
+    private void GetTriangleCentersXY(Vector3 vertex1, Vector3 vertex2, Vector3 vertex3,
         out Vector3 centerA, out float areaA,
         out bool hasCenterB, out Vector3 centerB, out float areaB)
     {
         var (L, M, H) = SortByHeight(vertex1, vertex2, vertex3);
 
-        // We can proceed if there is a horizontal edge for the triangle. (I.e. two vertices have the same y-position).
+        // We can proceed if there is a horizontal edge for the triangle. (i.e. two vertices have the same y-position).
         // Otherwise, we will split the triangle into two different triangles such that they both have one
         // horizontal edge.
-        if (eq(vertex1.y, vertex2.y) || eq(vertex2.y, vertex3.y) || eq(vertex1.y, vertex3.y))
+        if (Eq(vertex1.y, vertex2.y) || Eq(vertex2.y, vertex3.y) || Eq(vertex1.y, vertex3.y))
         {
             //float y0 = H.y - ComputeWaterHeight(H, time);
             float y0 = H.y;
@@ -386,26 +440,20 @@ public class MeshBuoyancy : MonoBehaviour
             float h = y0 - y;
 
             // The base is lower than the lone vertex if the 2 lowest vertices have the same vertical position
-            bool isBaseLower = eq(L.y, M.y);
+            bool isBaseLower = Eq(L.y, M.y);
 
-            float tc;
-            float bMinusA;
             if (isBaseLower)
             {
-                tc = (4 * y0 + 3 * h) / (6 * y0 + 4 * h);
-                bMinusA = (M - L).magnitude;
-
+                float tc = (4 * y0 + 3 * h) / (6 * y0 + 4 * h);
                 centerA = Vector3.Lerp(H, 0.5f * (L + M), tc);
             }
             else
             {
-                tc = (2 * y0 + h) / (6 * y0 + 2 * h);
-                bMinusA = (H - M).magnitude;
-
+                float tc = (2 * y0 + h) / (6 * y0 + 2 * h);
                 centerA = Vector3.Lerp(0.5f * (H + M), L, tc);
             }
 
-            // Use modified Heron's Formula to find the area
+            // Use a modified version of Heron's Formula to find the area
             // https://www.iquilezles.org/blog/?p=1579
             float a = (L - M).sqrMagnitude;
             float b = (M - H).sqrMagnitude;
@@ -420,15 +468,19 @@ public class MeshBuoyancy : MonoBehaviour
         {
             // Split the triangle into two sub-triangles, such that each sub-triangle has one horizontal base
 
+            // P is the midpoint between L and H, where its y-position is the same as M's y-position
             float t = (M.y - L.y) / (H.y - L.y);
             Vector3 P = Vector3.Lerp(L, H, t);
 
-            if (!eq(P.y, M.y))
+            if (!Eq(P.y, M.y))
                 Debug.Log($"Warning: unable to compute a midpoint P between L and H such that (P.y == M.y): " +
                     $"L{L} M{M} H{H} P{P}");
 
-            GetTriangleCenters2(L, P, M, out centerA, out areaA, out _, out _, out _);
-            GetTriangleCenters2(M, P, H, out centerB, out areaB, out _, out _, out _);
+            // Now calculate the centers of triangles LPM and MPH
+            // These recursive calls will hit the base case where there's one horizontal side, meaning there won't be any recursive calls after this
+            // (see what I did there? BASE CASE???)
+            GetTriangleCentersXY(L, P, M, out centerA, out areaA, out _, out _, out _);
+            GetTriangleCentersXY(M, P, H, out centerB, out areaB, out _, out _, out _);
             hasCenterB = true;
         }
     }
@@ -442,8 +494,15 @@ public class MeshBuoyancy : MonoBehaviour
         return (L, M, H);
     }
 
-    private bool eq(float a, float b)
+    /// <summary>
+    /// Returns true if the two values are approximately equal (less than one thousandth from each other).
+    /// This is useful when accounting for floating point precision error.
+    /// </summary>
+    /// <param name="a">the first number</param>
+    /// <param name="b">the second number</param>
+    /// <returns>whether they are approximately equal</returns>
+    private bool Eq(float a, float b)
     {
-        return Mathf.Abs(a - b) < 0.005f;
+        return Mathf.Abs(a - b) < 0.001f;
     }
 }
