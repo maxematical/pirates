@@ -8,11 +8,15 @@ public class MeshBuoyancy : MonoBehaviour
     private const bool DEBUG_SUBMERGED_TRIANGLES = true;
     private const bool DEBUG_SUBMERGED_CENTERS = true;
     private const bool LOG_UPDATE_TIME = false;
+    private const bool APPLY_DAMPING_FORCE = false;
 
     public Ocean _Ocean;
     public Mesh _HullPhysicsMesh;
     public GameObject _HullPhysicsObject;
     public Rigidbody _Rigidbody;
+
+    public float _Density = 0.25f;
+    public float _Gravity = 9.81f;
 
     private Vector3[] _meshVertices;
     private Vector3[] _meshNormals;
@@ -32,11 +36,13 @@ public class MeshBuoyancy : MonoBehaviour
         Transform hullTransform = _HullPhysicsObject.transform;
         float time = Application.isPlaying ? Time.time : 0;
 
-        float density = 0.25f;
-        float g = 9.81f;
-
-        float dampingConstant = 15f;
+        float dampingConstant = 5f;
         Vector3 dampingVector = -_Rigidbody.velocity.sqrMagnitude * _Rigidbody.velocity * dampingConstant * Time.deltaTime;
+
+        float underwaterLength = 2f; // TODO actually calculate this
+        float reynolds = _Rigidbody.velocity.magnitude * underwaterLength;
+        float d = Mathf.Log10(reynolds) - 2;
+        float Cf = 0.075f / (d * d);
 
         for (int i = 0; i < _meshTriangles.Length; i += 3)
         {
@@ -46,8 +52,7 @@ public class MeshBuoyancy : MonoBehaviour
             Vector3 v1 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(_meshVertices[i1]);
             Vector3 v2 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(_meshVertices[i2]);
             Vector3 v3 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(_meshVertices[i3]);
-            Vector3 center = (v1 + v2 + v3) / 3f;
-
+            
             Vector3 n1 = hullTransform.rotation * _meshNormals[i1];
             Vector3 n2 = hullTransform.rotation * _meshNormals[i2];
             Vector3 n3 = hullTransform.rotation * _meshNormals[i3];
@@ -72,21 +77,11 @@ public class MeshBuoyancy : MonoBehaviour
                     out Vector3 center1, out float area1,
                     out bool has2, out Vector3 center2, out float area2);
 
-                float waterHeight1 = ComputeWaterHeight(center1, time) - center1.y;
-                Vector3 force1 = -density * g * waterHeight1 * normal;
-                force1.x = force1.z = 0;
-                _Rigidbody.AddForceAtPosition(force1 * area1, center1);
-
-                _Rigidbody.AddForceAtPosition(dampingVector * area1, center1);
+                ApplyTriangleForces(center1, normal, area1, dampingVector, Cf, time);
 
                 if (has2)
                 {
-                    float waterHeight2 = ComputeWaterHeight(center2, time) - center2.y;
-                    Vector3 force2 = -density * g * waterHeight2 * normal;
-                    force2.x = force2.z = 0;
-                    _Rigidbody.AddForceAtPosition(force2 * area2, center2);
-
-                    _Rigidbody.AddForceAtPosition(dampingVector * area2, center2);
+                    ApplyTriangleForces(center2, normal, area2, dampingVector, Cf, time);
                 }
             }
 
@@ -96,27 +91,41 @@ public class MeshBuoyancy : MonoBehaviour
                     out Vector3 center1, out float area1,
                     out bool has2, out Vector3 center2, out float area2);
 
-                float waterHeight1 = ComputeWaterHeight(center1, time) - center1.y;
-                Vector3 force1 = -density * g * waterHeight1 * normal;
-                force1.x = force1.z = 0;
-                _Rigidbody.AddForceAtPosition(force1 * area1, center1);
-
-                _Rigidbody.AddForceAtPosition(dampingVector * area1, center1);
+                ApplyTriangleForces(center1, normal, area1, dampingVector, Cf, time);
 
                 if (has2)
                 {
-                    float waterHeight2 = ComputeWaterHeight(center2, time) - center2.y;
-                    Vector3 force2 = -density * g * waterHeight2 * normal;
-                    force2.x = force2.z = 0;
-                    _Rigidbody.AddForceAtPosition(force2 * area2, center2);
-
-                    _Rigidbody.AddForceAtPosition(dampingVector * area2, center2);
+                    ApplyTriangleForces(center2, normal, area2, dampingVector, Cf, time);
                 }
             }
         }
 
         if (LOG_UPDATE_TIME)
             Debug.Log("Time taken to perform fixed update: " + ((Time.realtimeSinceStartup - startTime) * 1000) + "ms");
+    }
+
+    // assuming the triangle is fully submerged
+    private void ApplyTriangleForces(Vector3 center, Vector3 normal, float area, Vector3 dampingVector, float Cf, float time)
+    {
+        float waterHeight = ComputeWaterHeight(center, time) - center.y;
+        Vector3 force1 = -_Density * _Gravity * waterHeight * normal;
+        force1.x = force1.z = 0;
+        _Rigidbody.AddForceAtPosition(force1 * area, center);
+
+        // Viscous water resistance
+        float k = 0; // TODO vertex paint the mesh so that triangles in the front have values [-1, 0] and in the back 0 to 1 or 2
+        float Cfr = Cf * (1 + k);
+        // note: velocity and angularVelocity might need to be measured relative to the center of mass
+        Vector3 triangleVelocity = _Rigidbody.velocity + Vector3.Cross(_Rigidbody.angularVelocity, center - _Rigidbody.worldCenterOfMass);
+        Vector3 vParallel = Vector3.ProjectOnPlane(triangleVelocity, normal);
+        Vector3 vfi = triangleVelocity.magnitude * -vParallel.normalized;
+        Vector3 resistanceForce = 0.5f * _Density * Cfr * area * vfi.magnitude * vfi;
+
+        _Rigidbody.AddForceAtPosition(resistanceForce, center);
+
+        // Damping force
+        if (APPLY_DAMPING_FORCE)
+            _Rigidbody.AddForceAtPosition(dampingVector * area, center);
     }
 
     private void OnDrawGizmosSelected()
