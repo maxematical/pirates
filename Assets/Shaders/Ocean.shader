@@ -57,6 +57,16 @@ Shader "Custom/Ocean"
 			float4 worldPos : TEXCOORD3;
 		};
 
+		struct SurfaceOutputCustom
+		{
+			float3 Albedo;
+			float3 Normal;
+			float Alpha;
+			float Emission;
+
+			float4 foam;
+		};
+
 		static const float pi = 3.141592653589793238462;
 		static const float deg2Rad = 3.141592653589793238462 / 180.0;
 		static const float one = 1.0;
@@ -191,7 +201,7 @@ Shader "Custom/Ocean"
 			return lerp(b, a, fac);
 		}
 
-		void surf(Input i, inout SurfaceOutput o)
+		void surf(Input i, inout SurfaceOutputCustom o)
 		{
 			float3 objectPos = i.worldPos - _OceanPosition;
 
@@ -226,13 +236,36 @@ Shader "Custom/Ocean"
 			//o.Albedo = (skyColor * 1 + base * 2) / 3 + 0.5 * (voronoi1 + voronoi2);
 
 			float foamAmount = saturate(0.5 * (objectPos.y - 0.85) + 0.5 * (2 - .85)) + 0.2;// * voronoi;
-			o.Albedo = lerp(_BaseColor, 1.0, foamAmount * voronoi1 * 0.5 * 5 + foamAmount * voronoi2 * 0.5 * 6);
+			float texturedFoamAmount = foamAmount * voronoi1 * 0.5 * 5 + foamAmount * voronoi2 * 0.5 * 6;
+			o.Albedo = lerp(_BaseColor, 1.0, texturedFoamAmount);
+			o.foam = texturedFoamAmount;
 			//o.Albedo = foamAmount * voronoi * 3;
 			//o.Albedo += i.crest;
 			//o.Albedo = i.crest;
 		}
 
-		half4 LightingSubsurf(SurfaceOutput s, half3 lightDir, half3 viewDir, half atten)
+		half4 foamLighting(SurfaceOutputCustom s, half3 lightDir, half3 viewDir, half atten)
+		{
+			float3 normal = s.Normal;
+
+			// Lambert lighting
+			half NdotL = saturate(dot(normal, lightDir)) * 0.5;
+
+			// Specular lighting
+			float specularity = 48.0;
+			float3 H = normalize(lightDir + viewDir);
+			float specularIntensity = pow(saturate(dot(H, normal)), specularity) * 0.45;
+
+			// Combine and return result
+			half4 c;
+			c.rgb = s.Albedo * _LightColor0.rgb * NdotL * atten +
+				_LightColor0.rgb * specularIntensity * atten;
+			c.a = s.Alpha;
+
+			return c;
+		}
+
+		half4 LightingSubsurf(SurfaceOutputCustom s, half3 lightDir, half3 viewDir, half atten)
 		{
 			float delta = 0.8; // can be anywhere between 0 - 1
 
@@ -251,7 +284,7 @@ Shader "Custom/Ocean"
 			// subsurface lighting
 			half VdotL = dot(viewDir, -(lightDir + normal * delta));
 			half IBack = pow(saturate(VdotL), 2) * 0.75;
-
+			
 			// combine lighting and return result
 			half4 c;
 			c.rgb = s.Albedo * _LightColor0.rgb * NdotL * atten +
@@ -259,7 +292,8 @@ Shader "Custom/Ocean"
 				s.Albedo * _LightColor0.rgb * atten * IBack;
 			c.a = s.Alpha;
 
-			return c;
+			return lerp(c, foamLighting(s, lightDir, viewDir, atten), s.foam);
+			//return c;
 		}
 
 		// This is UNUSED right now
