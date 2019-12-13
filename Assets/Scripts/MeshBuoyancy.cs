@@ -29,17 +29,42 @@ public class MeshBuoyancy : MonoBehaviour
 
     public float _ReferenceSpeed;
 
-
-
     private Vector3[] _meshVertices;
     private Vector3[] _meshNormals;
     private int[] _meshTriangles;
+    private Color[] _meshColors;
+    private float[] _NormalizedResistanceValues;
 
     private void Start()
     {
         _meshVertices = _HullPhysicsMesh.vertices;
         _meshNormals = _HullPhysicsMesh.normals;
         _meshTriangles = _HullPhysicsMesh.triangles;
+        _meshColors = _HullPhysicsMesh.colors;
+
+        // Determine normalized resistance values
+        _NormalizedResistanceValues = new float[_meshTriangles.Length / 3];
+        float avgResistance = 0;
+
+        // 1) Calculate initial resistance values by looking up the vertex colors, and also find their average
+        for (int i = 0; i < _meshTriangles.Length; i += 3)
+        {
+            int i1 = _meshTriangles[i];
+            int i2 = _meshTriangles[i + 1];
+            int i3 = _meshTriangles[i + 2];
+            Color color = (_meshColors[i1] + _meshColors[i2] + _meshColors[i3]) / 3;
+            float resistanceValue = (color.r / 3f) - 1;
+
+            _NormalizedResistanceValues[i / 3] = resistanceValue;
+            avgResistance += resistanceValue;
+        }
+        avgResistance /= _NormalizedResistanceValues.Length;
+
+        // 2) Ensure that the resistance values are normalized (i.e. have an average of zero)
+        for (int i = 0; i < _NormalizedResistanceValues.Length; i++)
+        {
+            _NormalizedResistanceValues[i] -= avgResistance;
+        }
     }
 
     private void FixedUpdate()
@@ -65,11 +90,13 @@ public class MeshBuoyancy : MonoBehaviour
             Vector3 v1 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(_meshVertices[i1]);
             Vector3 v2 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(_meshVertices[i2]);
             Vector3 v3 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(_meshVertices[i3]);
-            
+
             Vector3 n1 = hullTransform.rotation * _meshNormals[i1];
             Vector3 n2 = hullTransform.rotation * _meshNormals[i2];
             Vector3 n3 = hullTransform.rotation * _meshNormals[i3];
             Vector3 normal = (n1 + n2 + n3).normalized;
+
+            float resistanceValue = _NormalizedResistanceValues[i / 3];
 
             bool hasIntersectA;
             Vector3 intersectA1;
@@ -90,11 +117,11 @@ public class MeshBuoyancy : MonoBehaviour
                     out Vector3 center1, out float area1,
                     out bool has2, out Vector3 center2, out float area2);
 
-                ApplyTriangleForces(center1, normal, area1, dampingVector, Cf, time);
+                ApplyTriangleForces(center1, normal, area1, dampingVector, Cf, resistanceValue, time);
 
                 if (has2)
                 {
-                    ApplyTriangleForces(center2, normal, area2, dampingVector, Cf, time);
+                    ApplyTriangleForces(center2, normal, area2, dampingVector, Cf, resistanceValue, time);
                 }
             }
 
@@ -104,11 +131,11 @@ public class MeshBuoyancy : MonoBehaviour
                     out Vector3 center1, out float area1,
                     out bool has2, out Vector3 center2, out float area2);
 
-                ApplyTriangleForces(center1, normal, area1, dampingVector, Cf, time);
+                ApplyTriangleForces(center1, normal, area1, dampingVector, Cf, resistanceValue, time);
 
                 if (has2)
                 {
-                    ApplyTriangleForces(center2, normal, area2, dampingVector, Cf, time);
+                    ApplyTriangleForces(center2, normal, area2, dampingVector, Cf, resistanceValue, time);
                 }
             }
         }
@@ -118,7 +145,7 @@ public class MeshBuoyancy : MonoBehaviour
     }
 
     // assuming the triangle is fully submerged
-    private void ApplyTriangleForces(Vector3 center, Vector3 normal, float area, Vector3 dampingVector, float Cf, float time)
+    private void ApplyTriangleForces(Vector3 center, Vector3 normal, float area, Vector3 dampingVector, float Cf, float resistanceValue, float time)
     {
         float waterHeight = ComputeWaterHeight(center, time) - center.y;
         Vector3 force1 = -_Density * _Gravity * waterHeight * normal;
@@ -126,8 +153,7 @@ public class MeshBuoyancy : MonoBehaviour
         _Rigidbody.AddForceAtPosition(force1 * area, center);
 
         // Viscous water resistance
-        float k = 0; // TODO vertex paint the mesh so that triangles in the front have values [-1, 0] and in the back 0 to 1 or 2
-        float Cfr = Cf * (1 + k);
+        float Cfr = Cf * (1 + resistanceValue); // resistanceValue is the same as k in the article
         // note: velocity and angularVelocity might need to be measured relative to the center of mass
         Vector3 triangleVelocity = _Rigidbody.velocity + Vector3.Cross(_Rigidbody.angularVelocity, center - _Rigidbody.worldCenterOfMass);
         float triangleSpeed = triangleVelocity.magnitude;
@@ -146,13 +172,13 @@ public class MeshBuoyancy : MonoBehaviour
         {
             float coeff = _LinearPressureCoefficient * relativeSpeed + _QuadraticPressureCoefficient * relativeSpeed * relativeSpeed;
             Vector3 pressureDragForce = -coeff * area * Mathf.Pow(cosTheta, _PressureFalloffPower) * normal;
-            _Rigidbody.AddForce(pressureDragForce);
+            //_Rigidbody.AddForce(pressureDragForce);
         }
         else
         {
             float coeff = _LinearSuctionCoefficient * relativeSpeed + _QuadraticSuctionCoefficient * relativeSpeed * relativeSpeed;
             Vector3 suctionDragForce = coeff * area * Mathf.Pow(-cosTheta, _SuctionFalloffPower) * normal;
-            _Rigidbody.AddForce(suctionDragForce);
+            //_Rigidbody.AddForce(suctionDragForce);
         }
 
         // Damping force
