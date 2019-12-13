@@ -140,6 +140,11 @@ public class MeshBuoyancy : MonoBehaviour
             }
         }
 
+        if (_Rigidbody.velocity.sqrMagnitude > 25f)
+        {
+            _Rigidbody.velocity = _Rigidbody.velocity.normalized * 5f;
+        }
+
         if (LOG_UPDATE_TIME)
             Debug.Log("Time taken to perform fixed update: " + ((Time.realtimeSinceStartup - startTime) * 1000) + "ms");
     }

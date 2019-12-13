@@ -736,11 +736,11 @@ MonoBehaviour:
   _Gravity: 9.81
   _LinearPressureCoefficient: 10
   _QuadraticPressureCoefficient: 10
-  _PressureFalloffPower: 0.5
+  _PressureFalloffPower: 0.2
   _LinearSuctionCoefficient: 10
   _QuadraticSuctionCoefficient: 10
-  _SuctionFalloffPower: 0.5
-  _ReferenceSpeed: 10
+  _SuctionFalloffPower: 0.2
+  _ReferenceSpeed: 2
 --- !u!1 &806464976
 GameObject:
   m_ObjectHideFlags: 0

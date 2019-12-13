@@ -240,7 +240,7 @@ Shader "Custom/Ocean"
 			// 3) use worldPos in lighting function to determine the amount of foam at the position
 			// 4) lerp normal water lighting with foam lighting depending on amount of foam here
 
-			float delta = 0.8; // can be anywhere between 0 - 1
+			float delta = 0.5; // can be anywhere between 0 - 1
 
 			/*float3 normalMap = tex2D(_NormalMap, float2(i.worldPos.x, i.worldPos.z));
 			float3 normal = normalize(s.Normal + normalMap * 0.25);*/
@@ -256,7 +256,7 @@ Shader "Custom/Ocean"
 
 			// subsurface lighting
 			half VdotL = dot(viewDir, -(lightDir + normal * delta));
-			half IBack = pow(saturate(VdotL), 2) * 0.75;
+			half IBack = pow(saturate(VdotL), 2) * 0.25;
 
 			// combine lighting and return result
 			half4 c;
