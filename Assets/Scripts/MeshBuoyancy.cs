@@ -18,6 +18,19 @@ public class MeshBuoyancy : MonoBehaviour
     public float _Density = 0.25f;
     public float _Gravity = 9.81f;
 
+    [Header("Pressure Drag Settings")]
+    public float _LinearPressureCoefficient;
+    public float _QuadraticPressureCoefficient;
+    public float _PressureFalloffPower = 0.5f;
+
+    public float _LinearSuctionCoefficient;
+    public float _QuadraticSuctionCoefficient;
+    public float _SuctionFalloffPower = 0.5f;
+
+    public float _ReferenceSpeed;
+
+
+
     private Vector3[] _meshVertices;
     private Vector3[] _meshNormals;
     private int[] _meshTriangles;
@@ -117,11 +130,30 @@ public class MeshBuoyancy : MonoBehaviour
         float Cfr = Cf * (1 + k);
         // note: velocity and angularVelocity might need to be measured relative to the center of mass
         Vector3 triangleVelocity = _Rigidbody.velocity + Vector3.Cross(_Rigidbody.angularVelocity, center - _Rigidbody.worldCenterOfMass);
+        float triangleSpeed = triangleVelocity.magnitude;
+
         Vector3 vParallel = Vector3.ProjectOnPlane(triangleVelocity, normal);
-        Vector3 vfi = triangleVelocity.magnitude * -vParallel.normalized;
+        Vector3 vfi = triangleSpeed * -vParallel.normalized;
         Vector3 resistanceForce = 0.5f * _Density * Cfr * area * vfi.magnitude * vfi;
 
         _Rigidbody.AddForceAtPosition(resistanceForce, center);
+
+        // Pressure drag
+        float relativeSpeed = triangleSpeed / _ReferenceSpeed;
+        float cosTheta = Vector3.Dot(triangleVelocity.normalized, normal); // cos theta = vi dot ni
+
+        if (cosTheta >= 0)
+        {
+            float coeff = _LinearPressureCoefficient * relativeSpeed + _QuadraticPressureCoefficient * relativeSpeed * relativeSpeed;
+            Vector3 pressureDragForce = -coeff * area * Mathf.Pow(cosTheta, _PressureFalloffPower) * normal;
+            _Rigidbody.AddForce(pressureDragForce);
+        }
+        else
+        {
+            float coeff = _LinearSuctionCoefficient * relativeSpeed + _QuadraticSuctionCoefficient * relativeSpeed * relativeSpeed;
+            Vector3 suctionDragForce = coeff * area * Mathf.Pow(-cosTheta, _SuctionFalloffPower) * normal;
+            _Rigidbody.AddForce(suctionDragForce);
+        }
 
         // Damping force
         if (APPLY_DAMPING_FORCE)
