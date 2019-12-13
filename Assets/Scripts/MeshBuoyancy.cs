@@ -172,13 +172,13 @@ public class MeshBuoyancy : MonoBehaviour
         {
             float coeff = _LinearPressureCoefficient * relativeSpeed + _QuadraticPressureCoefficient * relativeSpeed * relativeSpeed;
             Vector3 pressureDragForce = -coeff * area * Mathf.Pow(cosTheta, _PressureFalloffPower) * normal;
-            //_Rigidbody.AddForce(pressureDragForce);
+            _Rigidbody.AddForceAtPosition(pressureDragForce, center);
         }
         else
         {
             float coeff = _LinearSuctionCoefficient * relativeSpeed + _QuadraticSuctionCoefficient * relativeSpeed * relativeSpeed;
             Vector3 suctionDragForce = coeff * area * Mathf.Pow(-cosTheta, _SuctionFalloffPower) * normal;
-            //_Rigidbody.AddForce(suctionDragForce);
+            _Rigidbody.AddForceAtPosition(suctionDragForce, center);
         }
 
         // Damping force

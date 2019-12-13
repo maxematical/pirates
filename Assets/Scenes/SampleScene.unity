@@ -734,13 +734,13 @@ MonoBehaviour:
   _Rigidbody: {fileID: 765587203}
   _Density: 0.25
   _Gravity: 9.81
-  _LinearPressureCoefficient: 1
-  _QuadraticPressureCoefficient: 1
+  _LinearPressureCoefficient: 10
+  _QuadraticPressureCoefficient: 10
   _PressureFalloffPower: 0.5
-  _LinearSuctionCoefficient: 1
-  _QuadraticSuctionCoefficient: 1
+  _LinearSuctionCoefficient: 10
+  _QuadraticSuctionCoefficient: 10
   _SuctionFalloffPower: 0.5
-  _ReferenceSpeed: 2
+  _ReferenceSpeed: 10
 --- !u!1 &806464976
 GameObject:
   m_ObjectHideFlags: 0
