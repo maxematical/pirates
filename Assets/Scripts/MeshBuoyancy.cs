@@ -19,6 +19,8 @@ public class MeshBuoyancy : MonoBehaviour
     public float _Density = 1.00f;
     public float _Gravity = 9.81f;
 
+    public float _BuoyancyMultiplier = 1f;
+
     [Header("Pressure Drag Settings")]
     public float _LinearPressureCoefficient;
     public float _QuadraticPressureCoefficient;
@@ -103,6 +105,9 @@ public class MeshBuoyancy : MonoBehaviour
         float d = Mathf.Log10(reynolds) - 2;
         float Cf = 0.075f / (d * d);
 
+        int numberTriangles = _meshTriangles.Length / 3;
+        Vector3 gravityForce = Vector3.down * _Gravity / numberTriangles;
+
         for (int i = 0; i < _meshTriangles.Length; i += 3)
         {
             int i1 = _meshTriangles[i];
@@ -138,11 +143,11 @@ public class MeshBuoyancy : MonoBehaviour
                     out Vector3 center1, out float area1,
                     out bool has2, out Vector3 center2, out float area2);
 
-                ApplyTriangleForces(center1, normal, area1, dampingVector, Cf, resistanceValue, time);
+                ApplyTriangleForces(center1, normal, area1, dampingVector, gravityForce, Cf, resistanceValue, time);
 
                 if (has2)
                 {
-                    ApplyTriangleForces(center2, normal, area2, dampingVector, Cf, resistanceValue, time);
+                    ApplyTriangleForces(center2, normal, area2, dampingVector, gravityForce, Cf, resistanceValue, time);
                 }
             }
 
@@ -152,11 +157,11 @@ public class MeshBuoyancy : MonoBehaviour
                     out Vector3 center1, out float area1,
                     out bool has2, out Vector3 center2, out float area2);
 
-                ApplyTriangleForces(center1, normal, area1, dampingVector, Cf, resistanceValue, time);
+                ApplyTriangleForces(center1, normal, area1, dampingVector, gravityForce, Cf, resistanceValue, time);
 
                 if (has2)
                 {
-                    ApplyTriangleForces(center2, normal, area2, dampingVector, Cf, resistanceValue, time);
+                    ApplyTriangleForces(center2, normal, area2, dampingVector, gravityForce, Cf, resistanceValue, time);
                 }
             }
         }
@@ -171,12 +176,16 @@ public class MeshBuoyancy : MonoBehaviour
     }
 
     // assuming the triangle is fully submerged
-    private void ApplyTriangleForces(Vector3 center, Vector3 normal, float area, Vector3 dampingVector, float Cf, float resistanceValue, float time)
+    private void ApplyTriangleForces(Vector3 center, Vector3 normal, float area, Vector3 dampingVector, Vector3 gravityForce, float Cf, float resistanceValue, float time)
     {
+        // Gravity
+        _Rigidbody.AddForceAtPosition(gravityForce, center);
+
+        // Buoyancy force
         float waterHeight = ComputeWaterHeight(center, time) - center.y;
-        Vector3 force1 = -_Density * _Gravity * waterHeight * normal;
-        force1.x = force1.z = 0;
-        _Rigidbody.AddForceAtPosition(force1 * area, center);
+        Vector3 buoyancyForce = -_Density * _Gravity * _BuoyancyMultiplier * waterHeight * normal;
+        buoyancyForce.x = buoyancyForce.z = 0;
+        _Rigidbody.AddForceAtPosition(buoyancyForce * area, center);
 
         // Viscous water resistance
         float Cfr = Cf * (1 + resistanceValue); // resistanceValue is the same as k in the article

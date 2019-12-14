@@ -735,6 +735,7 @@ MonoBehaviour:
   _Rigidbody: {fileID: 765587203}
   _Density: 1
   _Gravity: 9.81
+  _BuoyancyMultiplier: 2
   _LinearPressureCoefficient: 10
   _QuadraticPressureCoefficient: 0
   _PressureFalloffPower: 0.7
@@ -755,8 +756,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _Ocean: {fileID: 1059587822}
-  _VertexWidth: 20
-  _VertexLength: 20
+  _VertexWidth: 16
+  _VertexLength: 16
   _Center: {x: 0, y: 0, z: 0}
   _Scale: 0.25
 --- !u!1 &806464976
