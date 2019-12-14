@@ -185,5 +185,7 @@ public class CaravelModelController : MonoBehaviour
         public Quaternion InitialRotation { get; set; }
         public Quaternion InitialBaseRotation { get; set; }
         public ParticleSystem Particles { get; set; }
+
+        public float LastFireTime { get; set; } = float.MinValue;
     }
 }

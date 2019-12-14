@@ -19,6 +19,8 @@ public class PlayerControl : ShipControl
     public float CannonballSpeed;
     public float CannonballGravity;
 
+    public float ReloadTime;
+
     [Header("Controls Settings")]
     [Tooltip("Max rotation speed in deg/s")]
     public float MaxRotationSpeed;
@@ -121,6 +123,16 @@ public class PlayerControl : ShipControl
                     Caravel.GetNextLeftCannonIndex() :
                     Caravel.GetNextRightCannonIndex();
                 var cannon = Caravel.GetCannon(cannonIndex);
+
+                // Check that we can fire the cannon (aren't reloading)
+                float timeSinceFired = Time.time - cannon.LastFireTime;
+                if (timeSinceFired < ReloadTime)
+                {
+                    return;
+                }
+                cannon.LastFireTime = Time.time;
+
+                // Fire a cannonball from the cannon
                 Vector3 spawnPos = cannon.SpawnPos.transform.position;
 
                 GameObject instantiated = Instantiate(CannonballPrefab, spawnPos, Quaternion.identity);

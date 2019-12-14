@@ -419,6 +419,7 @@ MonoBehaviour:
   MaxFiringAngle: 30
   CannonballSpeed: 5
   CannonballGravity: 3
+  ReloadTime: 1.5
   MaxRotationSpeed: 45
   RotationAcceleration: 130
   RotationDamping: 0.99
