@@ -732,14 +732,14 @@ MonoBehaviour:
     type: 3}
   _HullPhysicsObject: {fileID: 1330306992}
   _Rigidbody: {fileID: 765587203}
-  _Density: 0.25
+  _Density: 1
   _Gravity: 9.81
   _LinearPressureCoefficient: 10
-  _QuadraticPressureCoefficient: 10
-  _PressureFalloffPower: 0.2
+  _QuadraticPressureCoefficient: 0
+  _PressureFalloffPower: 0.7
   _LinearSuctionCoefficient: 10
-  _QuadraticSuctionCoefficient: 10
-  _SuctionFalloffPower: 0.2
+  _QuadraticSuctionCoefficient: 0
+  _SuctionFalloffPower: 0.7
   _ReferenceSpeed: 2
 --- !u!1 &806464976
 GameObject:

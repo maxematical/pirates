@@ -16,7 +16,7 @@ public class MeshBuoyancy : MonoBehaviour
     public GameObject _HullPhysicsObject;
     public Rigidbody _Rigidbody;
 
-    public float _Density = 0.25f;
+    public float _Density = 1.00f;
     public float _Gravity = 9.81f;
 
     [Header("Pressure Drag Settings")]
@@ -178,13 +178,13 @@ public class MeshBuoyancy : MonoBehaviour
         {
             float coeff = _LinearPressureCoefficient * relativeSpeed + _QuadraticPressureCoefficient * relativeSpeed * relativeSpeed;
             Vector3 pressureDragForce = -coeff * area * Mathf.Pow(cosTheta, _PressureFalloffPower) * normal;
-            //_Rigidbody.AddForceAtPosition(pressureDragForce, center);
+            _Rigidbody.AddForceAtPosition(pressureDragForce, center);
         }
         else
         {
             float coeff = _LinearSuctionCoefficient * relativeSpeed + _QuadraticSuctionCoefficient * relativeSpeed * relativeSpeed;
             Vector3 suctionDragForce = coeff * area * Mathf.Pow(-cosTheta, _SuctionFalloffPower) * normal;
-            //_Rigidbody.AddForceAtPosition(suctionDragForce, center);
+            _Rigidbody.AddForceAtPosition(suctionDragForce, center);
         }
 
         // Damping force
