@@ -91,6 +91,7 @@ public class PlayerControl : ShipControl
         Caravel.CannonballSpeed = CannonballSpeed;
         Caravel.CannonballGravity = CannonballGravity;
         Caravel.CannonMaxFiringAngle = MaxFiringAngle;
+        Caravel.Velocity = Velocity;
     }
 
     private void HandleFireInput()
@@ -130,13 +131,7 @@ public class PlayerControl : ShipControl
                 cannonball.Gravity = CannonballGravity;
                 cannonball.IgnoreCollisions = this.gameObject;
 
-                //cannon.Particles.Emit(15);
-                float particleRotation = cannon.Particles.transform.rotation.eulerAngles.y * Mathf.Deg2Rad;
-                var mainParticlesModule = cannon.Particles.main;
-                mainParticlesModule.startRotation = particleRotation;
-                //cannon.Particles. = mainParticlesModule;
-
-                cannon.Particles.Play();
+                Caravel.PlayCannonEffects(cannonIndex);
             }
         }
     }

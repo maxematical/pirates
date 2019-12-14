@@ -15,9 +15,7 @@ public class ShipControl : MonoBehaviour
 
     protected virtual void FixedUpdate()
     {
-        float heading = transform.rotation.eulerAngles.y;
-        Vector3 velocity = Speed * transform.forward;
-        transform.position += velocity * Time.fixedDeltaTime;
+        transform.position += Velocity * Time.fixedDeltaTime;
     }
 
     public static (float, float) CalculateCannonAim(Vector3 position, Vector3 target, float speed, float gravity)

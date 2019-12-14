@@ -240,7 +240,11 @@ public class AiControl : ShipControl
             float sqrDistance = _h.SqrDistanceTo(_h.TargetPos);
             if (sqrDistance <= _h.Settings.CannonRange * _h.Settings.CannonRange)
             {
-                Vector3 spawnPos = _h.SelfPos;
+                int cannonIndex = relativeAngle <= 0 ?
+                    _ai.Caravel.GetNextLeftCannonIndex() :
+                    _ai.Caravel.GetNextRightCannonIndex();
+                var cannon = _ai.Caravel.GetCannon(cannonIndex);
+                Vector3 spawnPos = cannon.SpawnPos.transform.position;
 
                 // Basic velocity prediction
                 // Predict how long a cannonball would take to land, if it was shot directly to where the target is right
@@ -265,6 +269,8 @@ public class AiControl : ShipControl
                 cannonball.Gravity = _h.Settings.CannonballGravity;
                 cannonball.Velocity = CalculateCannonballTrajectory(spawnPos, predictedTargetPos, _h.Settings.CannonballSpeed, _h.Settings.CannonballGravity);
                 cannonball.IgnoreCollisions = _h.Self;
+
+                _ai.Caravel.PlayCannonEffects(cannonIndex);
 
                 _ai.TimeUntilReloaded = _ai.Settings.ReloadSpeed.RandomInRange;
             }

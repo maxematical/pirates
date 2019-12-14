@@ -201,47 +201,39 @@ Shader "Custom/Ocean"
 			return lerp(b, a, fac);
 		}
 
+		float greaterThan(float n, float atLeast)
+		{
+			/*if (atLeast == -1) return n;
+			return n >= atLeast ? 1 : 0;*/
+			return saturate(99999 * (n - atLeast));
+		}
+
 		void surf(Input i, inout SurfaceOutputCustom o)
 		{
 			float3 objectPos = i.worldPos - _OceanPosition;
 
-			//o.Albedo = tex2D(_NormalMap, float2(i.worldPos.x, i.worldPos.z));
-			//o.Albedo = _BaseColor;
-
-			//float2 normalUv = float2(0.25 * i.originalPos.x + _Time[1] * 0.05, 0.25 * i.originalPos.z - _Time[1] * 0.02);
 			float2 normalUv = 0.02 * (i.originalPos.xz + i.worldPos.xz) * 0.5;
 			normalUv = normalUv.yx;
-			/*normalUv.x += i.worldPos.y * 0.2;
-			normalUv.x += _Time[1] * 0.3;
-			normalUv.y += _Time[1] * -0.14;*/
 			
 			float3 normalMap = tex2D(_NoiseMap, normalUv) - float3(0.5, 0, 0.5);
 			normalMap.y = 0;
 			normalMap = normalize(normalMap);
 			o.Normal += normalMap * 0.25;
 
-			half4 skyData = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, i.worldRefl);
-			half3 skyColor = DecodeHDR(skyData, unity_SpecCube0_HDR);
+			/*half4 skyData = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, i.worldRefl);
+			half3 skyColor = DecodeHDR(skyData, unity_SpecCube0_HDR);*/
 
-			float3 base = lerp(_BaseColor, _EdgeColor, objectPos.y - 0.65);
+			float3 base = lerp(_BaseColor, _EdgeColor, objectPos.y - 0.85);
 
 			float2 voronoiUv1 = (i.originalPos.xz * 0.05 * 0.75 + i.worldPos.xz * 0.05 * 0.25) + _Time[1] * 0* float2(0.8, 1.1);
 			float2 voronoiUv2 = (i.originalPos.xz * 0.008 + i.worldPos.xz * 0.04) + float2(0.5, 0.4) + _Time[0] *0 * float2(0.8, 1.1);
-			float3 voronoi1 = tex2D(_Voronoi, voronoiUv1 * 0.75) * 0.5;
-			float3 voronoi2 = tex2D(_Voronoi, voronoiUv2 * 0.75) * 0.5;
-			//voronoi = saturate(voronoi / 0.5) * 0.5;
-			//voronoi = saturate(2.0 * voronoi - 0.15) * 0.5;
-			//if (voronoi > 1.0) {voronoi = 0.0;}
+			float3 voronoi1 = greaterThan(tex2D(_Voronoi, voronoiUv1 * 0.75), 0.3) * 0.4;
+			float3 voronoi2 = greaterThan(tex2D(_Voronoi, voronoiUv2 * 0.75), 0.3) * 0.4;
 
-			//o.Albedo = (skyColor * 1 + base * 2) / 3 + 0.5 * (voronoi1 + voronoi2);
-
-			float foamAmount = saturate(0.5 * (objectPos.y - 0.85) + 0.5 * (2 - .85)) + 0.2;// * voronoi;
-			float texturedFoamAmount = foamAmount * voronoi1 * 0.5 * 5 + foamAmount * voronoi2 * 0.5 * 6;
-			o.Albedo = lerp(_BaseColor, 1.0, texturedFoamAmount);
+			float foamAmount = saturate(0.3 * (objectPos.y - 0.85) + 0.3 * (3.2 - .85)) + 0.2;// * voronoi;
+			float texturedFoamAmount = greaterThan(foamAmount * voronoi1 * 2.6 + foamAmount * voronoi2 * 2, 0.7) * 0.8;
+			o.Albedo = lerp(base, 1.0, texturedFoamAmount);
 			o.foam = texturedFoamAmount;
-			//o.Albedo = foamAmount * voronoi * 3;
-			//o.Albedo += i.crest;
-			//o.Albedo = i.crest;
 		}
 
 		half4 foamLighting(SurfaceOutputCustom s, half3 lightDir, half3 viewDir, half atten)
@@ -284,7 +276,7 @@ Shader "Custom/Ocean"
 			// subsurface lighting
 			half VdotL = dot(viewDir, -(lightDir + normal * delta));
 			half IBack = pow(saturate(VdotL), 2) * 0.75;
-			
+
 			// combine lighting and return result
 			half4 c;
 			c.rgb = s.Albedo * _LightColor0.rgb * NdotL * atten +
@@ -296,17 +288,6 @@ Shader "Custom/Ocean"
 			//return c;
 		}
 
-		// This is UNUSED right now
-		fixed4 frag(v2f i) : SV_TARGET
-		{
-			half4 skyData = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, i.worldRefl);
-			half3 skyColor = DecodeHDR(skyData, unity_SpecCube0_HDR);
-
-			fixed4 col = 0;
-			col.rgb = (skyColor * 3+ _BaseColor * 0) / 3;
-
-			return col;
-		}
 		ENDCG
 		//}
 	}

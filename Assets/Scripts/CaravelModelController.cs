@@ -21,8 +21,12 @@ public class CaravelModelController : MonoBehaviour
     public Vector3 TargetAimPos { private get; set; }
     public float CannonballSpeed { private get; set; }
     public float CannonballGravity { private get; set; }
+
     // Maximum yaw angle that the cannons can be fired from, measured in degrees from helm/stern
     public float CannonMaxFiringAngle { private get; set; }
+
+    public Vector3 Velocity { private get; set; }
+
     private int _nextLeftCannonIndex;
     private int _nextRightCannonIndex;
     private int _numberLeftCannons;
@@ -119,6 +123,22 @@ public class CaravelModelController : MonoBehaviour
     public CannonSettings GetCannon(int index)
     {
         return Cannons[index];
+    }
+
+    public void PlayCannonEffects(int index)
+    {
+        CannonSettings cannon = Cannons[index];
+
+        float particleRotation = cannon.Particles.transform.rotation.eulerAngles.y * Mathf.Deg2Rad;
+        var mainParticlesModule = cannon.Particles.main;
+        mainParticlesModule.startRotation = particleRotation;
+
+        var velocityModule = cannon.Particles.GetComponent<ParticleSystem>().velocityOverLifetime;
+        velocityModule.x = Velocity.x * 10;
+        velocityModule.y = Velocity.y * 10;
+        velocityModule.z = Velocity.z * 10;
+
+        cannon.Particles.Play();
     }
 
     private void UpdateCannonCount()

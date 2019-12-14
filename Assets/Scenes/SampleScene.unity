@@ -596,7 +596,7 @@ MonoBehaviour:
     Wavelength: 2.5
     DirectionXZ: {x: 0.5, y: 0.5}
     Speed: 3
-  - Steepness: 0.4
+  - Steepness: 1.5
     Amplitude: 0.3
     Wavelength: 4
     DirectionXZ: {x: 0.2, y: 1}
