@@ -20,7 +20,7 @@ public class ShipControl : MonoBehaviour
         transform.position += velocity * Time.fixedDeltaTime;
     }
 
-    public static Vector3 CalculateCannonballTrajectory(Vector3 position, Vector3 spawnPos, Vector3 target, float speed, float gravity)
+    public static (float, float) CalculateCannonAim(Vector3 position, Vector3 target, float speed, float gravity)
     {
         float yawAngle = -Mathf.Atan2(target.z - position.z, target.x - position.x) * Mathf.Rad2Deg + 90;
 
@@ -36,6 +36,12 @@ public class ShipControl : MonoBehaviour
             pitchAngle = 45;
         }
 
+        return (yawAngle, pitchAngle);
+    }
+
+    public static Vector3 CalculateCannonballTrajectory(Vector3 position, Vector3 target, float speed, float gravity)
+    {
+        var (yawAngle, pitchAngle) = CalculateCannonAim(position, target, speed, gravity);
         return Quaternion.Euler(-pitchAngle, yawAngle, 0) * Vector3.forward * speed;
     }
 

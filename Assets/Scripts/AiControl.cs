@@ -263,7 +263,7 @@ public class AiControl : ShipControl
                 GameObject instantiated = Instantiate(_ai.CannonballPrefab, spawnPos, Quaternion.identity);
                 Cannonball cannonball = instantiated.GetComponent<Cannonball>();
                 cannonball.Gravity = _h.Settings.CannonballGravity;
-                cannonball.Velocity = CalculateCannonballTrajectory(_h.SelfPos, spawnPos, predictedTargetPos, _h.Settings.CannonballSpeed, _h.Settings.CannonballGravity);
+                cannonball.Velocity = CalculateCannonballTrajectory(spawnPos, predictedTargetPos, _h.Settings.CannonballSpeed, _h.Settings.CannonballGravity);
                 cannonball.IgnoreCollisions = _h.Self;
 
                 _ai.TimeUntilReloaded = _ai.Settings.ReloadSpeed.RandomInRange;

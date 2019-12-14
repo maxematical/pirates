@@ -220,6 +220,9 @@ MonoBehaviour:
     Base: {fileID: 2023182436247196602}
     SpawnPos: {fileID: 1811391992}
     IsRightSide: 1
+  FireVFXPrefab: {fileID: 7931700058953922575, guid: 1ac582662eff6ff4fa6090eed3fdfbf2,
+    type: 3}
+  FireVFXScale: 0.1
 --- !u!64 &509609045
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -244,7 +247,7 @@ PrefabInstance:
     - target: {fileID: -927199367670048503, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}
       propertyPath: m_Name
-      value: caravel
+      value: Caravel Animated
       objectReference: {fileID: 0}
     - target: {fileID: 1173702418961526531, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}

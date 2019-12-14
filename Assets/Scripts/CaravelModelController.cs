@@ -12,6 +12,9 @@ public class CaravelModelController : MonoBehaviour
 
     public List<CannonSettings> Cannons;
 
+    public GameObject FireVFXPrefab;
+    public float FireVFXScale;
+
     public float TargetRudderTilt { private get; set; }
     private float _rudderTilt;
 
@@ -38,6 +41,7 @@ public class CaravelModelController : MonoBehaviour
         }
 
         UpdateCannonCount();
+        InstantiateParticleSystems();
     }
 
     private void OnValidate()
@@ -70,11 +74,8 @@ public class CaravelModelController : MonoBehaviour
 
                 initialBaseRotation = Quaternion.Euler(initialBaseRotation.eulerAngles.x, 0, initialBaseRotation.eulerAngles.z);
 
-                Vector3 trajectory = ShipControl.CalculateCannonballTrajectory(transform.position,
-                    spawnPos.transform.position, TargetAimPos, CannonballSpeed, CannonballGravity);
-                Quaternion trajectoryQuaternion = Quaternion.LookRotation(trajectory, Vector3.up);
-                float yaw = trajectoryQuaternion.eulerAngles.y;
-                float pitch = trajectoryQuaternion.eulerAngles.x;
+                var (yaw, pitch) = ShipControl.CalculateCannonAim(spawnPos.transform.position, TargetAimPos, CannonballSpeed,
+                    CannonballGravity);
 
                 // Ensure the yaw angle isn't too far to either side
                 float relativeYaw = Util.Clamp180(yaw - transform.rotation.eulerAngles.y);
@@ -92,27 +93,32 @@ public class CaravelModelController : MonoBehaviour
                     // relativeYaw = Util.ClosestAngle(relativeYaw, clampMin, clampMax);
                     continue;
                 }
-                yaw = relativeYaw + transform.rotation.eulerAngles.y - 90;
+                float cannonYaw = relativeYaw + 90;
 
-                Quaternion baseRotation = Quaternion.AngleAxis(yaw, Vector3.up) * initialBaseRotation;
-                barrel.transform.localRotation = Quaternion.AngleAxis(-pitch, Vector3.right) * initialRotation;
+                Quaternion baseRotation = Quaternion.AngleAxis(cannonYaw, Vector3.up) * initialBaseRotation;
+                barrel.transform.localRotation = Quaternion.AngleAxis(pitch, Vector3.right) * initialRotation;
                 cannonSettings.Base.transform.localRotation = baseRotation;
             }
         }
     }
 
-    public GameObject GetNextLeftCannonSpawnPos()
+    public int GetNextLeftCannonIndex()
     {
         int index = _nextLeftCannonIndex;
         _nextLeftCannonIndex = (index + 1) % _numberLeftCannons;
-        return Cannons[_nextLeftCannonIndex].SpawnPos;
+        return index;
     }
 
-    public GameObject GetNextRightCannonSpawnPos()
+    public int GetNextRightCannonIndex()
     {
         int index = _nextRightCannonIndex;
         _nextRightCannonIndex = _numberLeftCannons + ((index + 1) % _numberRightCannons);
-        return Cannons[_nextRightCannonIndex].SpawnPos;
+        return index;
+    }
+
+    public CannonSettings GetCannon(int index)
+    {
+        return Cannons[index];
     }
 
     private void UpdateCannonCount()
@@ -131,6 +137,23 @@ public class CaravelModelController : MonoBehaviour
         _nextRightCannonIndex = _numberLeftCannons + (_nextRightCannonIndex - _numberLeftCannons) % _numberRightCannons;
     }
 
+    private void InstantiateParticleSystems()
+    {
+        foreach (CannonSettings cannon in Cannons)
+        {
+            GameObject vfx = Instantiate(FireVFXPrefab, cannon.SpawnPos.transform);
+            vfx.transform.localScale = Vector3.one * FireVFXScale;
+
+            if (cannon.IsRightSide)
+            {
+                vfx.transform.localRotation = Quaternion.Euler(180, 0, 0);
+            }
+
+            cannon.Particles = vfx.GetComponent<ParticleSystem>();
+            //cannon.Particles.Stop();
+        }
+    }
+
     [Serializable]
     public class CannonSettings
     {
@@ -141,5 +164,6 @@ public class CaravelModelController : MonoBehaviour
 
         public Quaternion InitialRotation { get; set; }
         public Quaternion InitialBaseRotation { get; set; }
+        public ParticleSystem Particles { get; set; }
     }
 }

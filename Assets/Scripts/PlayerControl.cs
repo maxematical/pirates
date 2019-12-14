@@ -116,18 +116,27 @@ public class PlayerControl : ShipControl
                     return;
                 }
 
-                GameObject spawner = relativeAngle <= 0 ?
-                    Caravel.GetNextLeftCannonSpawnPos() :
-                    Caravel.GetNextRightCannonSpawnPos();
-                Vector3 spawnPos = spawner.transform.position;
+                int cannonIndex = relativeAngle <= 0 ?
+                    Caravel.GetNextLeftCannonIndex() :
+                    Caravel.GetNextRightCannonIndex();
+                var cannon = Caravel.GetCannon(cannonIndex);
+                Vector3 spawnPos = cannon.SpawnPos.transform.position;
 
                 GameObject instantiated = Instantiate(CannonballPrefab, spawnPos, Quaternion.identity);
-                Vector3 cannonballVelocity = CalculateCannonballTrajectory(transform.position, spawnPos, target, CannonballSpeed, CannonballGravity) + this.Velocity;
+                Vector3 cannonballVelocity = CalculateCannonballTrajectory(spawnPos, target, CannonballSpeed, CannonballGravity) + this.Velocity;
 
                 Cannonball cannonball = instantiated.GetComponent<Cannonball>();
                 cannonball.Velocity = cannonballVelocity;
                 cannonball.Gravity = CannonballGravity;
                 cannonball.IgnoreCollisions = this.gameObject;
+
+                //cannon.Particles.Emit(15);
+                float particleRotation = cannon.Particles.transform.rotation.eulerAngles.y * Mathf.Deg2Rad;
+                var mainParticlesModule = cannon.Particles.main;
+                mainParticlesModule.startRotation = particleRotation;
+                //cannon.Particles. = mainParticlesModule;
+
+                cannon.Particles.Play();
             }
         }
     }
