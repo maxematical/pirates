@@ -50,6 +50,11 @@ public class Cannonball : MonoBehaviour
 
             GameObject vfx = Instantiate(CollisionVFXPrefab, contact.point, Quaternion.identity);
             vfx.transform.rotation = Quaternion.LookRotation(vfxDirection, Vector3.up);
+
+            ParticleSystem particles = vfx.GetComponent<ParticleSystem>();
+            var particleLifetime = particles.main.startLifetime;
+            float vfxTime = particles.main.duration + particleLifetime.constant;
+            Destroy(vfx, vfxTime);
         }
     }
 }
