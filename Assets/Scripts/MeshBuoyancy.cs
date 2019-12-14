@@ -34,7 +34,19 @@ public class MeshBuoyancy : MonoBehaviour
     private Vector3[] _meshNormals;
     private int[] _meshTriangles;
     private Color[] _meshColors;
-    private float[] _NormalizedResistanceValues;
+    private float[] _normalizedResistanceValues;
+
+    public WaterPatch _WaterPatch
+    {
+        get
+        {
+            if (_cachedWaterPatch == null)
+                _cachedWaterPatch = GetComponent<WaterPatch>();
+
+            return _cachedWaterPatch;
+        }
+    }
+    private WaterPatch _cachedWaterPatch;
 
     private void Start()
     {
@@ -44,7 +56,7 @@ public class MeshBuoyancy : MonoBehaviour
         _meshColors = _HullPhysicsMesh.colors;
 
         // Determine normalized resistance values
-        _NormalizedResistanceValues = new float[_meshTriangles.Length / 3];
+        _normalizedResistanceValues = new float[_meshTriangles.Length / 3];
         float avgResistance = 0;
 
         // 1) Calculate initial resistance values by looking up the vertex colors, and also find their average
@@ -56,15 +68,15 @@ public class MeshBuoyancy : MonoBehaviour
             Color color = (_meshColors[i1] + _meshColors[i2] + _meshColors[i3]) / 3;
             float resistanceValue = (color.r / 3f) - 1;
 
-            _NormalizedResistanceValues[i / 3] = resistanceValue;
+            _normalizedResistanceValues[i / 3] = resistanceValue;
             avgResistance += resistanceValue;
         }
-        avgResistance /= _NormalizedResistanceValues.Length;
+        avgResistance /= _normalizedResistanceValues.Length;
 
         // 2) Ensure that the resistance values are normalized (i.e. have an average of zero)
-        for (int i = 0; i < _NormalizedResistanceValues.Length; i++)
+        for (int i = 0; i < _normalizedResistanceValues.Length; i++)
         {
-            _NormalizedResistanceValues[i] -= avgResistance;
+            _normalizedResistanceValues[i] -= avgResistance;
         }
     }
 
@@ -75,6 +87,14 @@ public class MeshBuoyancy : MonoBehaviour
         Transform hullTransform = _HullPhysicsObject.transform;
         float time = Application.isPlaying ? Time.time : 0;
 
+        // Update water patch
+        _WaterPatch._Center = transform.position;
+        if (_WaterPatch.SqrDrift > 0.5f || time - _WaterPatch.LastUpdateTime >= 0f)
+        {
+            _WaterPatch.UpdatePatch(time);
+        }
+
+        // Apply forces
         float dampingConstant = 5f;
         Vector3 dampingVector = -_Rigidbody.velocity.sqrMagnitude * _Rigidbody.velocity * dampingConstant * Time.deltaTime;
 
@@ -97,7 +117,7 @@ public class MeshBuoyancy : MonoBehaviour
             Vector3 n3 = hullTransform.rotation * _meshNormals[i3];
             Vector3 normal = (n1 + n2 + n3).normalized;
 
-            float resistanceValue = _NormalizedResistanceValues[i / 3];
+            float resistanceValue = _normalizedResistanceValues[i / 3];
 
             bool hasIntersectA;
             Vector3 intersectA1;
@@ -394,11 +414,13 @@ public class MeshBuoyancy : MonoBehaviour
 
     public float ComputeWaterHeight(Vector3 position, float time)
     {
-        // Note: this is an estimate! However, it is usually very accurate.
-        Vector3 xzOffset = _Ocean.TransformVertex(position, time) - position;
-        xzOffset.y = 0;
+        return _WaterPatch.GetWaterHeight(position.x, position.z);
 
-        return _Ocean.TransformVertex(position - xzOffset, time).y;
+        // Note: this is an estimate! However, it is usually very accurate.
+        //Vector3 xzOffset = _Ocean.TransformVertex(position, time) - position;
+        //xzOffset.y = 0;
+
+        //return _Ocean.TransformVertex(position - xzOffset, time).y;
     }
 
     private void ComputeTriangleWaterIntersection(Vector3 point1, Vector3 point2, Vector3 point3, float time, Vector3 normal,

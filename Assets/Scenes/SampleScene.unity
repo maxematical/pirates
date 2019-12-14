@@ -204,7 +204,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &405364694
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -495,6 +495,7 @@ GameObject:
   - component: {fileID: 765587202}
   - component: {fileID: 765587203}
   - component: {fileID: 765587207}
+  - component: {fileID: 765587208}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -741,6 +742,23 @@ MonoBehaviour:
   _QuadraticSuctionCoefficient: 0
   _SuctionFalloffPower: 0.7
   _ReferenceSpeed: 2
+--- !u!114 &765587208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765587200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5de4c29bd953f5a42864ba8af99131b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _Ocean: {fileID: 1059587822}
+  _VertexWidth: 20
+  _VertexLength: 20
+  _Center: {x: 0, y: 0, z: 0}
+  _Scale: 0.25
 --- !u!1 &806464976
 GameObject:
   m_ObjectHideFlags: 0
@@ -952,7 +970,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1059587821
 Transform:
   m_ObjectHideFlags: 0
