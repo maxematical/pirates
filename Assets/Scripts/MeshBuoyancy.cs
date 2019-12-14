@@ -7,6 +7,7 @@ public class MeshBuoyancy : MonoBehaviour
     private const bool DEBUG_NORMALS = false;
     private const bool DEBUG_SUBMERGED_TRIANGLES = true;
     private const bool DEBUG_SUBMERGED_CENTERS = true;
+    private const bool DEBUG_UNDERWATER_LENGTH = true;
     private const bool LOG_UPDATE_TIME = false;
     private const bool APPLY_DAMPING_FORCE = false;
 
@@ -77,7 +78,7 @@ public class MeshBuoyancy : MonoBehaviour
         float dampingConstant = 5f;
         Vector3 dampingVector = -_Rigidbody.velocity.sqrMagnitude * _Rigidbody.velocity * dampingConstant * Time.deltaTime;
 
-        float underwaterLength = 2f; // TODO actually calculate this
+        var (underwaterLength, _) = ComputeUnderwaterLength(time);
         float reynolds = _Rigidbody.velocity.magnitude * underwaterLength;
         float d = Mathf.Log10(reynolds) - 2;
         float Cf = 0.075f / (d * d);
@@ -177,18 +178,46 @@ public class MeshBuoyancy : MonoBehaviour
         {
             float coeff = _LinearPressureCoefficient * relativeSpeed + _QuadraticPressureCoefficient * relativeSpeed * relativeSpeed;
             Vector3 pressureDragForce = -coeff * area * Mathf.Pow(cosTheta, _PressureFalloffPower) * normal;
-            _Rigidbody.AddForceAtPosition(pressureDragForce, center);
+            //_Rigidbody.AddForceAtPosition(pressureDragForce, center);
         }
         else
         {
             float coeff = _LinearSuctionCoefficient * relativeSpeed + _QuadraticSuctionCoefficient * relativeSpeed * relativeSpeed;
             Vector3 suctionDragForce = coeff * area * Mathf.Pow(-cosTheta, _SuctionFalloffPower) * normal;
-            _Rigidbody.AddForceAtPosition(suctionDragForce, center);
+            //_Rigidbody.AddForceAtPosition(suctionDragForce, center);
         }
 
         // Damping force
         if (APPLY_DAMPING_FORCE)
             _Rigidbody.AddForceAtPosition(dampingVector * area, center);
+    }
+
+    private (float, float) ComputeUnderwaterLength(float time)
+    {
+        float minZ = 0;
+        float maxZ = 0;
+
+        Matrix4x4 toWorld = _HullPhysicsObject.transform.localToWorldMatrix;
+        Matrix4x4 toHullLocal = transform.worldToLocalMatrix * _HullPhysicsObject.transform.localToWorldMatrix;
+
+        int[] tris = _HullPhysicsMesh.triangles;
+        Vector3[] verts = _HullPhysicsMesh.vertices;
+
+        for (int i = 0; i < tris.Length; i++)
+        {
+            Vector3 v = verts[tris[i]];
+            Vector3 vWorld = toWorld.MultiplyPoint3x4(v);
+            Vector3 vLocal = toHullLocal.MultiplyPoint3x4(v);
+
+            if (vWorld.y < ComputeWaterHeight(vWorld, time))
+            {
+                minZ = Mathf.Min(minZ, vLocal.z);
+                maxZ = Mathf.Max(maxZ, vLocal.z);
+            }
+        }
+
+        float length = maxZ - minZ;
+        return (length, minZ);
     }
 
     private void OnDrawGizmosSelected()
@@ -212,6 +241,17 @@ public class MeshBuoyancy : MonoBehaviour
             Vector3 v1 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(vertices[i1]);
             Vector3 v2 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(vertices[i2]);
             Vector3 v3 = hullTransform.localToWorldMatrix.MultiplyPoint3x4(vertices[i3]);
+
+            if (DEBUG_UNDERWATER_LENGTH && i == (Mathf.Floor(Time.time) * 6) % 150)
+            {
+                Gizmos.color = v1.y < ComputeWaterHeight(v1, time) ? Color.yellow : Color.magenta;
+                Gizmos.DrawSphere(v1, 0.125f);
+
+                Matrix4x4 toHullLocal = transform.worldToLocalMatrix * _HullPhysicsObject.transform.localToWorldMatrix;
+                Gizmos.DrawSphere(toHullLocal.MultiplyPoint3x4(vertices[i1]), 0.15f);
+
+                Gizmos.color = Color.blue;
+            }
 
             Vector3 triangleNormal = (hullTransform.rotation * normals[i1] +
                 hullTransform.rotation * normals[i2] +
@@ -284,6 +324,20 @@ public class MeshBuoyancy : MonoBehaviour
 
         Gizmos.color = Color.red;
         Gizmos.DrawWireMesh(_HullPhysicsMesh, hullTransform.position, hullTransform.rotation, hullTransform.lossyScale);
+
+        if (DEBUG_UNDERWATER_LENGTH)
+        {
+            var (length, minZ) = ComputeUnderwaterLength(time);
+
+            Gizmos.color = Color.blue;
+            Gizmos.matrix *= transform.localToWorldMatrix;
+
+            Vector3 size = Vector3.one;
+            size.z = length;
+            Gizmos.DrawWireCube(Vector3.forward * (minZ + length / 2), size);
+
+            Gizmos.matrix *= transform.worldToLocalMatrix;
+        }
 
         {
             Gizmos.color = Color.magenta;
