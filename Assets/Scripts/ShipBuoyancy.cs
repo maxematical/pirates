@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using VoxelSystem;
 
 public class ShipBuoyancy : MonoBehaviour
 {
@@ -10,21 +11,20 @@ public class ShipBuoyancy : MonoBehaviour
 
     public Bounds ScanHullBounds;
     public float SamplesResolution = 0.25f;
-
-    public Bounds OceanBounds;
-    public float OceanResolution = 0.5f;
-    public Ocean Ocean;
-
+    
     public MeshCollider HullCollider;
     public string RaycastLayer;
 
     public WaterPatch _WaterPatch;
 
+    public Mesh _HullMesh;
+    public int _voxelResolution;
+
     public List<BuoyancySphere> BuoyancySpheres;
     public float _Gravity;
     public float _Density;
     public float _Damping;
-    public float DragCoefficient;
+    public float _DragCoefficient;
 
     private float _totalVolume;
 
@@ -89,7 +89,7 @@ public class ShipBuoyancy : MonoBehaviour
             //Rigidbody.AddForceAtPosition(-Damping * volumeSubmerged * v.sqrMagnitude * v.normalized, sphereCenter);
 
             Vector3 waterCurrentVelocity = Vector3.zero;
-            Rigidbody.AddForceAtPosition(DragCoefficient * forceProportion * Rigidbody.mass * filledRatio * (waterCurrentVelocity - v), filledCenter);
+            Rigidbody.AddForceAtPosition(_DragCoefficient * forceProportion * Rigidbody.mass * filledRatio * (waterCurrentVelocity - v), filledCenter);
         }
     }
 
@@ -126,31 +126,6 @@ public class ShipBuoyancy : MonoBehaviour
         }
 
         Gizmos.color = Color.red;
-
-        if (false && OceanBounds != null)
-        {
-            Gizmos.matrix *= transform.localToWorldMatrix;
-            Gizmos.DrawWireCube(OceanBounds.center, OceanBounds.extents * 2);
-            Gizmos.matrix *= transform.localToWorldMatrix.inverse;
-
-            int amountX = Mathf.FloorToInt(OceanBounds.extents.x * 2 / OceanResolution) + 1;
-            int amountZ = Mathf.FloorToInt(OceanBounds.extents.z * 2 / OceanResolution) + 1;
-            for (int z = 0; z < amountZ; z++)
-            {
-                for (int x = 0; x < amountX; x++)
-                {
-                    Vector3 offset = new Vector3(x * OceanResolution, 0, z * OceanResolution);
-                    Vector3 localPosition = offset + OceanBounds.min;
-                    Vector3 worldPosition = transform.localToWorldMatrix.MultiplyPoint3x4(localPosition);
-                    Vector3 transformed = Ocean?.TransformVertex(worldPosition, Time.time) ?? worldPosition;
-                    Gizmos.DrawSphere(transformed, 0.075f);
-                }
-            }
-
-            Vector3 v = transform.position;
-            v.y = ComputeWaterHeight(v, Application.isPlaying ? Time.time : 0);
-            Gizmos.DrawCube(v, Vector3.one * 0.35f);
-        }
 
         if (BuoyancySpheres != null)
         {
@@ -208,16 +183,36 @@ public class ShipBuoyancy : MonoBehaviour
         HullCollider.enabled = prevEnabled;
     }
 
+    public void VoxelizeHull()
+    {
+        // Apply transform to the hull mesh
+        Matrix4x4 transform = HullCollider.gameObject.transform.localToWorldMatrix;
+        Vector3[] transformedVertices = _HullMesh.vertices;
+        for (int i = 0; i < transformedVertices.Length; i++)
+        {
+            transformedVertices[i] = transform.MultiplyPoint3x4(transformedVertices[i]);
+        }
+
+        Mesh transformedMesh = new Mesh();
+        transformedMesh.vertices = transformedVertices;
+        transformedMesh.triangles = _HullMesh.triangles;
+        transformedMesh.normals = _HullMesh.normals;
+
+        // Voxelize the mesh
+        List<Voxel_t> voxels;
+        CPUVoxelizer.Voxelize(transformedMesh, _voxelResolution, out voxels, out _);
+
+        // Save voxels to samples
+        _hullSamplePositions.Clear();
+        foreach (Voxel_t voxel in voxels)
+        {
+            _hullSamplePositions.Add((voxel.position));
+        }
+    }
+
     public float ComputeWaterHeight(Vector3 position, float time)
     {
         return _WaterPatch?.GetWaterHeight(position.x, position.z) ?? 0;
-        return 0;
-        
-        // Note: this is an estimate! However, it is usually very accurate.
-        Vector3 xzOffset = Ocean.TransformVertex(position, time) - position;
-        xzOffset.y = 0;
-
-        return Ocean.TransformVertex(position - xzOffset, time).y;
     }
 
     /// <summary>

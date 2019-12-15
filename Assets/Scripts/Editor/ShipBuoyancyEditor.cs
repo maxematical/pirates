@@ -34,5 +34,11 @@ public class ShipBuoyancyEditor : Editor
             script.ComputeHullSamples();
         }
         EditorGUI.EndDisabledGroup();
+
+        if (GUILayout.Button("Voxelize Hull"))
+        {
+            Undo.RecordObject(script, "Voxelize Hull");
+            script.VoxelizeHull();
+        }
     }
 }

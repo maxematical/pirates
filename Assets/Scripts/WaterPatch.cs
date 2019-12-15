@@ -137,6 +137,8 @@ public class WaterPatch : MonoBehaviour
 
     private float EstimateHeight(Vector3 position, float time)
     {
+        //return 0;
+
         // Note: this is an estimate! However, it is usually very accurate.
         Vector3 xzOffset = _Ocean.TransformVertex(position, time) - position;
         xzOffset.y = 0;
