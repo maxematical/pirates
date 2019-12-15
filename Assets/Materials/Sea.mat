@@ -95,5 +95,5 @@ Material:
     m_Colors:
     - _BaseColor: {r: 0.407783, g: 0.8962264, b: 0.86868644, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _EdgeColor: {r: 0.498324, g: 0.951, b: 0.8671136, a: 1}
+    - _EdgeColor: {r: 0.49803922, g: 0.9529412, b: 0.92148525, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}

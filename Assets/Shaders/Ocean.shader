@@ -218,21 +218,25 @@ Shader "Custom/Ocean"
 			float3 normalMap = tex2D(_NoiseMap, normalUv) - float3(0.5, 0, 0.5);
 			normalMap.y = 0;
 			normalMap = normalize(normalMap);
-			o.Normal += normalMap * 0.25;
+			//o.Normal += normalMap * 0.25;
 
 			/*half4 skyData = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, i.worldRefl);
 			half3 skyColor = DecodeHDR(skyData, unity_SpecCube0_HDR);*/
 
-			float3 base = lerp(_BaseColor, _EdgeColor, objectPos.y - 0.85);
+			float3 base = lerp(_BaseColor, _EdgeColor, 2 * (objectPos.y - 0.85));
 
-			float2 voronoiUv1 = (i.originalPos.xz * 0.05 * 0.75 + i.worldPos.xz * 0.05 * 0.25) + _Time[1] * 0* float2(0.8, 1.1);
-			float2 voronoiUv2 = (i.originalPos.xz * 0.008 + i.worldPos.xz * 0.04) + float2(0.5, 0.4) + _Time[0] *0 * float2(0.8, 1.1);
-			float3 voronoi1 = greaterThan(tex2D(_Voronoi, voronoiUv1 * 0.75), 0.3) * 0.4;
-			float3 voronoi2 = greaterThan(tex2D(_Voronoi, voronoiUv2 * 0.75), 0.3) * 0.4;
+			float3 noise = tex2D(_NoiseMap, i.originalPos.xz * 0.015 + _Time[1] * float2(0.01, 0.02));
 
-			float foamAmount = saturate(0.3 * (objectPos.y - 0.85) + 0.3 * (3.2 - .85)) + 0.2;// * voronoi;
-			float texturedFoamAmount = greaterThan(foamAmount * voronoi1 * 2.6 + foamAmount * voronoi2 * 2, 0.7) * 0.8;
+			float2 voronoiUv1 = (i.originalPos.xz * 0.05 * 0.25 + i.worldPos.xz * 0.05 * 0.75) + _Time[1] * 0* float2(0.8, 1.1);
+			float2 voronoiUv2 = (i.originalPos.xz * 0.008 + i.worldPos.xz * 0.04) + float2(0.5, 0.4) + noise.rb * 0.5;
+			float3 voronoi1 = greaterThan(tex2D(_Voronoi, voronoiUv1 * 0.75), 0.6) * 0.4;
+			float3 voronoi2 = greaterThan(tex2D(_Voronoi, voronoiUv2 * 0.75), 0.6) * 0.4;
+
+			float foamAmount = saturate(0.4 * objectPos.y + 0.42) + 0.2;// * voronoi;
+			float texturedFoamAmount = greaterThan(foamAmount * voronoi1 * 2.6 + voronoi2 * 2, 0.7) * 0.8;
 			o.Albedo = lerp(base, 1.0, texturedFoamAmount);
+			//o.Albedo = noise;
+			//o.Albedo = voronoi2;
 			o.foam = texturedFoamAmount;
 		}
 
@@ -269,9 +273,9 @@ Shader "Custom/Ocean"
 			half NdotL = saturate(dot(normal, lightDir)) * 0.45;
 
 			// specular lighting
-			float specularity = 48.0;
+			float specularity = 196.0;
 			float3 H = normalize(lightDir + viewDir);
-			float specularIntensity = pow(saturate(dot(H, normal)), specularity) * 0.2;
+			float specularIntensity = pow(saturate(dot(H, normal)), specularity) * 0.4;
 
 			// subsurface lighting
 			half VdotL = dot(viewDir, -(lightDir + normal * delta));
@@ -279,9 +283,10 @@ Shader "Custom/Ocean"
 
 			// combine lighting and return result
 			half4 c;
-			c.rgb = s.Albedo * _LightColor0.rgb * NdotL * atten +
+			c.rgb = s.Albedo * _LightColor0.rgb * NdotL * atten * 0.35 +
 				_LightColor0.rgb * specularIntensity * atten +
-				s.Albedo * _LightColor0.rgb * atten * IBack;
+				s.Albedo * _LightColor0.rgb * atten * IBack +
+				s.Albedo * _LightColor0.rgb * 0.25;
 			c.a = s.Alpha;
 
 			return lerp(c, foamLighting(s, lightDir, viewDir, atten), s.foam);
