@@ -523,7 +523,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 765587200}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d2ec623341a026848a053639181040bc, type: 3}
   m_Name: 
@@ -539,6 +539,7 @@ MonoBehaviour:
   Ocean: {fileID: 1059587822}
   HullCollider: {fileID: 509609045}
   RaycastLayer: Buoyancy Detection
+  _WaterPatch: {fileID: 765587208}
   BuoyancySpheres:
   - positionObject: {fileID: 19801300}
     radius: 0.4
@@ -550,9 +551,10 @@ MonoBehaviour:
     radius: 0.4
   - positionObject: {fileID: 485863260}
     radius: 0.5
-  BuoyancyForce: 250
-  GravityForce: 50
-  Damping: 50
+  _Gravity: 30
+  _Density: 30
+  _Damping: 0
+  DragCoefficient: 3
   Rigidbody: {fileID: 765587203}
   _hullSamplePositions:
   - {x: -0.19999999, y: -0.11537835, z: -0.8999999}
@@ -653,7 +655,7 @@ Rigidbody:
   m_Mass: 1
   m_Drag: 0
   m_AngularDrag: 0.05
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
@@ -723,7 +725,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 765587200}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cdde2c2ce8cea9648afadf2444abcb17, type: 3}
   m_Name: 

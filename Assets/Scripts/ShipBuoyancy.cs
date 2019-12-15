@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class ShipBuoyancy : MonoBehaviour
 {
+    private const float EPSILON = 0.001f;
+
     public Bounds ScanHullBounds;
     public float SamplesResolution = 0.25f;
 
@@ -16,10 +18,15 @@ public class ShipBuoyancy : MonoBehaviour
     public MeshCollider HullCollider;
     public string RaycastLayer;
 
+    public WaterPatch _WaterPatch;
+
     public List<BuoyancySphere> BuoyancySpheres;
-    public float BuoyancyForce;
-    public float GravityForce;
-    public float Damping;
+    public float _Gravity;
+    public float _Density;
+    public float _Damping;
+    public float DragCoefficient;
+
+    private float _totalVolume;
 
     public Rigidbody Rigidbody;
 
@@ -27,42 +34,63 @@ public class ShipBuoyancy : MonoBehaviour
     [HideInInspector]
     private List<Vector3> _hullSamplePositions;
 
-    public ShipBuoyancy()
-    {
+    private GameObject _emptyGameobject;
 
+    private void Start()
+    {
+        _emptyGameobject = new GameObject();
+
+        BuoyancySpheres.Clear();
+        foreach (Vector3 samplePosition in _hullSamplePositions)
+        {
+            GameObject obj = Instantiate(_emptyGameobject, transform);
+            obj.transform.localPosition = samplePosition;
+
+            BuoyancySphere sphere = new BuoyancySphere();
+            sphere.positionObject = obj;
+            sphere.radius = 0.25f;
+            BuoyancySpheres.Add(sphere);
+        }
+
+        _totalVolume = 0;
+        foreach (BuoyancySphere sphere in BuoyancySpheres)
+        {
+            _totalVolume += CalculateFilledSphereVolume(sphere.radius, 2 * sphere.radius);
+        }
     }
 
     void FixedUpdate()
     {
+        _WaterPatch._Center = transform.position;
+        _WaterPatch.UpdatePatch(Time.time);
+
         foreach (BuoyancySphere sphere in BuoyancySpheres)
         {
-            Vector3 samplePos = sphere.WorldPosition;
-            float waterHeight = ComputeWaterHeight(samplePos, Time.time);
-            float sphereBottom = samplePos.y - sphere.radius;
+            Vector3 sphereCenter = sphere.WorldPosition;
+            float waterHeight = ComputeWaterHeight(sphereCenter, Time.time);
+            float sphereBottom = sphereCenter.y - sphere.radius;
+            Vector3 filledCenter = CalculateFilledSphereCenter(sphereCenter, sphere.radius, waterHeight - sphereBottom);
 
-            //Vector3 forcePos = transform.position;
-            Vector3 forcePos = samplePos;
-            
-            float volumeSubmerged = CalculateFilledSphereVolume(sphere.radius, waterHeight - sphereBottom);
-            if (volumeSubmerged > 0)
+            float filledVolume = CalculateFilledSphereVolume(sphere.radius, waterHeight - sphereBottom);
+            float sphereVolume = CalculateFilledSphereVolume(sphere.radius, 2 * sphere.radius);
+            float forceProportion = sphereVolume / _totalVolume;
+            float filledRatio = filledVolume / sphereVolume;
+
+            if (filledVolume > 0)
             {
-                Rigidbody.AddForceAtPosition(Vector3.up * BuoyancyForce * Time.fixedDeltaTime * volumeSubmerged, forcePos);
+                Rigidbody.AddForceAtPosition(Vector3.up * _Gravity * _Density * forceProportion * Time.fixedDeltaTime * filledVolume, filledCenter);
             }
 
-            Rigidbody.AddForceAtPosition(Vector3.down * GravityForce * Time.fixedDeltaTime, forcePos);
+            Rigidbody.AddForceAtPosition(Vector3.down * _Gravity * forceProportion * Time.fixedDeltaTime, filledCenter);
 
             Vector3 v = Rigidbody.velocity;
             float density = sphereBottom < waterHeight ? 100f : 10f;
 
-            Rigidbody.AddForce(-Damping * volumeSubmerged * v.sqrMagnitude * v.normalized);
+            //Rigidbody.AddForceAtPosition(-Damping * volumeSubmerged * v.sqrMagnitude * v.normalized, sphereCenter);
+
+            Vector3 waterCurrentVelocity = Vector3.zero;
+            Rigidbody.AddForceAtPosition(DragCoefficient * forceProportion * Rigidbody.mass * filledRatio * (waterCurrentVelocity - v), filledCenter);
         }
-
-
-        //(-normalize(vel) * length(vel) * length(vel)) * (float DynPressure = (0.5 * (v * v) * dens * 100.0);
-
-        //Vector3 velocity = Rigidbody.velocity;
-        //velocity.y *= 1 - 0.1f * Time.fixedDeltaTime;
-        //Rigidbody.velocity = velocity;
     }
 
     private void OnDrawGizmos()
@@ -126,10 +154,23 @@ public class ShipBuoyancy : MonoBehaviour
 
         if (BuoyancySpheres != null)
         {
+            float time = Application.isPlaying ? Time.time : 0;
             foreach (BuoyancySphere sphere in BuoyancySpheres)
             {
                 if (sphere.Initialized)
+                {
+                    float waterHeight = ComputeWaterHeight(sphere.WorldPosition, time);
+
+                    Vector3 waterLevelCenter = sphere.WorldPosition;
+                    waterLevelCenter.y = waterHeight;
+                    Vector3 waterLevelSize = Vector3.one * sphere.radius * 2;
+                    waterLevelSize.y = 0;
+                    Gizmos.DrawCube(waterLevelCenter, waterLevelSize);
+                    
                     Gizmos.DrawWireSphere(sphere.WorldPosition, sphere.radius);
+
+                    Gizmos.DrawSphere(CalculateFilledSphereCenter(sphere.WorldPosition, sphere.radius, waterHeight - sphere.WorldPosition.y + sphere.radius), 0.075f);
+                }
             }
         }
     }
@@ -169,6 +210,9 @@ public class ShipBuoyancy : MonoBehaviour
 
     public float ComputeWaterHeight(Vector3 position, float time)
     {
+        return _WaterPatch?.GetWaterHeight(position.x, position.z) ?? 0;
+        return 0;
+        
         // Note: this is an estimate! However, it is usually very accurate.
         Vector3 xzOffset = Ocean.TransformVertex(position, time) - position;
         xzOffset.y = 0;
@@ -192,15 +236,63 @@ public class ShipBuoyancy : MonoBehaviour
         // Just change the upper bound of the integral from "radius" to "-radius + filledAmount"
 
         // Use single letter variables to make the math formula less long
-        float r = radius;
-        float x = filledAmount;
-        float r2 = r * r;
-        float r3 = r2 * r;
+        float R = radius;
+        float h = filledAmount;
+        float R2 = R * R;
+        float R3 = R2 * R;
+        float d = h - R;
 
-        float sum = r - x;
-        float factor = x * r2 - r3 / 3 - Mathf.Pow(sum, 3) / 3;
-        float max = 4f / 3f * r3;
-        return Mathf.PI * Mathf.Clamp(factor, 0, max);
+        // The volume as a multiple of pi
+        float factor = R2 * h - R3 / 3 - (d * d * d) / 3;
+        
+        // Return the actual volume
+        return Mathf.PI * factor;
+    }
+
+    public Vector3 CalculateFilledSphereCenter(Vector3 center, float radius, float filledAmount)
+    {
+        filledAmount = Mathf.Clamp(filledAmount, 0, 2 * radius);
+
+        float volume = CalculateFilledSphereVolume(radius, filledAmount);
+
+        float R = radius;
+        float V = volume;
+        float h = filledAmount;
+        float d = h - R;
+
+        float R2 = R * R;
+        float R3 = R2 * R;
+        float R4 = R3 * R;
+
+        float d2 = d * d;
+        float d3 = d2 * d;
+        float d4 = d3 * d;
+
+        float t;
+
+        if (Eq(V, 0) || R == 0)
+        {
+            t = 0;
+        }
+        else
+        {
+            float coeff = Mathf.PI * 0.5f;
+            float div = R * V;
+            //Debug.Log("div = " + div);
+            t = coeff * (h * R3 - R * d3 / 3f - R4 / 3f + 0.5f * R2 * d2 - 0.5f * R4 - 0.25f * d4 + 0.25f * R4) / div;
+        }
+
+        //Debug.Log("t: " + t);
+        //Debug.Log($"R:{R}, V:{V}, h:{h}, d:{d}");
+
+        Vector3 volumeCenter = center;
+        volumeCenter.y += 2 * R * t - R;
+        return volumeCenter;
+    }
+
+    private static bool Eq(float x, float y)
+    {
+        return Mathf.Abs(x - y) < EPSILON;
     }
 
     [Serializable]
