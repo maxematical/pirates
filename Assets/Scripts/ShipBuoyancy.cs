@@ -19,12 +19,14 @@ public class ShipBuoyancy : MonoBehaviour
 
     public Mesh _HullMesh;
     public int _voxelResolution;
+    public float _voxelSphereSize;
 
     public List<BuoyancySphere> BuoyancySpheres;
     public float _Gravity;
     public float _Density;
-    public float _Damping;
     public float _DragCoefficient;
+    public float _AngularDragCoefficient;
+    public float _AverageWidth;
 
     private float _totalVolume;
 
@@ -35,6 +37,9 @@ public class ShipBuoyancy : MonoBehaviour
     private List<Vector3> _hullSamplePositions;
 
     private GameObject _emptyGameobject;
+
+    private Vector3 _gizmosForceCenter;
+    private Vector3 _gizmosTotalForce;
 
     private void Start()
     {
@@ -48,7 +53,7 @@ public class ShipBuoyancy : MonoBehaviour
 
             BuoyancySphere sphere = new BuoyancySphere();
             sphere.positionObject = obj;
-            sphere.radius = 0.25f;
+            sphere.radius = _voxelSphereSize;
             BuoyancySpheres.Add(sphere);
         }
 
@@ -64,6 +69,14 @@ public class ShipBuoyancy : MonoBehaviour
         _WaterPatch._Center = transform.position;
         _WaterPatch.UpdatePatch(Time.time);
 
+        int forceCount = 0;
+        Vector3 forceCenter = Vector3.zero;
+        Vector3 totalForce = Vector3.zero;
+
+        int torqueCount = 0;
+        Vector3 torqueCenter = Vector3.zero;
+        Vector3 totalTorque = Vector3.zero;
+
         foreach (BuoyancySphere sphere in BuoyancySpheres)
         {
             Vector3 sphereCenter = sphere.WorldPosition;
@@ -73,24 +86,55 @@ public class ShipBuoyancy : MonoBehaviour
 
             float filledVolume = CalculateFilledSphereVolume(sphere.radius, waterHeight - sphereBottom);
             float sphereVolume = CalculateFilledSphereVolume(sphere.radius, 2 * sphere.radius);
-            float forceProportion = sphereVolume / _totalVolume;
             float filledRatio = filledVolume / sphereVolume;
 
             if (filledVolume > 0)
             {
-                Rigidbody.AddForceAtPosition(Vector3.up * _Gravity * _Density * forceProportion * Time.fixedDeltaTime * filledVolume, filledCenter);
+                totalForce += Vector3.up * _Gravity * _Density * filledRatio;
+                forceCenter += filledCenter;
+                forceCount++;
             }
 
-            Rigidbody.AddForceAtPosition(Vector3.down * _Gravity * forceProportion * Time.fixedDeltaTime, filledCenter);
+            //totalForce += Vector3.down * _Gravity * forceProportion;
+            //forceCenter += filledCenter;
+            //forceCount++;
 
-            Vector3 v = Rigidbody.velocity;
-            float density = sphereBottom < waterHeight ? 100f : 10f;
-
-            //Rigidbody.AddForceAtPosition(-Damping * volumeSubmerged * v.sqrMagnitude * v.normalized, sphereCenter);
+            Vector3 v = Rigidbody.velocity + Vector3.Cross(Rigidbody.angularVelocity, sphereCenter - Rigidbody.worldCenterOfMass);//not causing shaking
 
             Vector3 waterCurrentVelocity = Vector3.zero;
-            Rigidbody.AddForceAtPosition(_DragCoefficient * forceProportion * Rigidbody.mass * filledRatio * (waterCurrentVelocity - v), filledCenter);
+            //Rigidbody.AddForceAtPosition(_DragCoefficient * Rigidbody.mass * filledRatio * (waterCurrentVelocity - v), filledCenter);
+            totalForce += _DragCoefficient * Rigidbody.mass * filledRatio * (waterCurrentVelocity - v);
+            forceCenter += filledCenter;
+            forceCount++;
+
+            totalTorque += _AngularDragCoefficient * Rigidbody.mass * filledRatio * _AverageWidth * _AverageWidth * -Rigidbody.angularVelocity;
+            torqueCenter += filledCenter;
+            torqueCount++;
         }
+
+        Rigidbody.AddForce(Vector3.down * _Gravity);
+
+        if (forceCount > 0)
+        {
+            forceCenter /= forceCount;
+            totalForce /= BuoyancySpheres.Count;
+            Rigidbody.AddForce(totalForce);
+
+            Vector3 x = forceCenter - Rigidbody.worldCenterOfMass;
+            Vector3 torqueFromForces = x.sqrMagnitude > 0.1f || true ? Vector3.Cross(x, totalForce) : Vector3.zero;
+            Rigidbody.AddTorque(torqueFromForces);
+        }
+        //Rigidbody.AddForceAtPosition(totalForce, forceCenter);
+
+        if (torqueCount > 0)
+        {
+            torqueCenter /= torqueCount;
+            totalTorque /= BuoyancySpheres.Count;
+            Rigidbody.AddTorque(totalTorque);
+        }
+
+        _gizmosForceCenter = forceCenter;
+        _gizmosTotalForce = totalForce - Vector3.down * _Gravity;
     }
 
     private void OnDrawGizmos()
@@ -106,6 +150,7 @@ public class ShipBuoyancy : MonoBehaviour
             return;
         }
 
+        // Other gizmos
         Gizmos.color = Color.blue;
 
         if (_hullSamplePositions != null)
@@ -148,6 +193,11 @@ public class ShipBuoyancy : MonoBehaviour
                 }
             }
         }
+
+        // Draw things from FixedUpdate
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawSphere(_gizmosForceCenter, 0.1f);
+        Gizmos.DrawRay(_gizmosForceCenter, _gizmosTotalForce);
     }
 
     public void ComputeHullSamples()
@@ -186,11 +236,11 @@ public class ShipBuoyancy : MonoBehaviour
     public void VoxelizeHull()
     {
         // Apply transform to the hull mesh
-        Matrix4x4 transform = HullCollider.gameObject.transform.localToWorldMatrix;
+        Matrix4x4 mat = this.transform.worldToLocalMatrix * HullCollider.gameObject.transform.localToWorldMatrix;
         Vector3[] transformedVertices = _HullMesh.vertices;
         for (int i = 0; i < transformedVertices.Length; i++)
         {
-            transformedVertices[i] = transform.MultiplyPoint3x4(transformedVertices[i]);
+            transformedVertices[i] = mat.MultiplyPoint3x4(transformedVertices[i]);
         }
 
         Mesh transformedMesh = new Mesh();
