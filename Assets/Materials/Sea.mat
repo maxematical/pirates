@@ -63,6 +63,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _SeaDistortion:
+        m_Texture: {fileID: 2800000, guid: 5d05d5f9f5339974e8ea6e62a99b0c36, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _Voronoi:
         m_Texture: {fileID: 2800000, guid: 0d4b3fd81929afc42880e3e282f9e75b, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -72,6 +76,9 @@ Material:
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
+    - _EdgeIncrease: 2
+    - _EdgeStart: -1.7
+    - _EmissionFactor: 0
     - _FoamAngle: 4
     - _FoamAngleMax: 1
     - _FoamAngleMin: 10
@@ -80,20 +87,25 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _LambertFactor: 0.45
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _SmoothnessTextureChannel: 0
+    - _SpecularFactor: 0.4
     - _SpecularHighlights: 1
+    - _SpecularPower: 192
     - _SrcBlend: 1
+    - _SubsurfDelta: 0.5
+    - _SubsurfFactor: 1
     - _UVSec: 0
     - _WaveSteepness: 0
     - _WavesCapacity: 4
     - _X: 2
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0.407783, g: 0.8962264, b: 0.86868644, a: 1}
+    - _BaseColor: {r: 0.3457451, g: 0.8114844, b: 0.8980392, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _EdgeColor: {r: 0.49803922, g: 0.9529412, b: 0.92148525, a: 1}
+    - _EdgeColor: {r: 0.48365203, g: 0.88141376, b: 0.92300004, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}

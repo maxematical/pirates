@@ -9,6 +9,8 @@ Shader "Custom/Ocean"
 
 		_BaseColor("Base Color", Color) = (0.0, 0.0, 0.0, 1.0)
 		_EdgeColor("Edge Color", Color) = (1.0, 1.0, 1.0, 1.0)
+		_EdgeStart("Edge Bias", float) = -1.7
+		_EdgeIncrease("Edge Increase", float) = 2
 
 		_FoamAngleMin("Foam Angle Min", float) = 4 // in degrees
 		_FoamAngleMax("Foam Angle Max", float) = 6
@@ -16,6 +18,14 @@ Shader "Custom/Ocean"
 		_NormalMap("Normal Map", 2D) = "" {}
 		_NoiseMap("Noise", 2D) = "" {}
 		_Voronoi("Voronoi", 2D) = "" {}
+		_SeaDistortion("Sea Distortion Noise", 2D) = "" {}
+
+		_SubsurfDelta("Subsurface Scattering Delta", float) = 1
+		_SubsurfFactor("Subsurface Scattering Factor", float) = 2
+		_LambertFactor("Lambert Factor", float) = 0.45
+		_SpecularPower("Specular Power", float) = 192
+		_SpecularFactor("Specular Factor", float) = 0.4
+		_EmissionFactor("Emission Factor", float) = 0
 	}
 	SubShader
 	{
@@ -79,6 +89,8 @@ Shader "Custom/Ocean"
 
 		float4 _BaseColor;
 		float4 _EdgeColor;
+		float _EdgeStart;
+		float _EdgeIncrease;
 
 		float _FoamAngleMin; // in degrees
 		float _FoamAngleMax; // in degrees
@@ -93,6 +105,18 @@ Shader "Custom/Ocean"
 		sampler2D _NormalMap;
 		sampler2D _NoiseMap;
 		sampler2D _Voronoi;
+		sampler2D _SeaDistortion;
+
+		// Misc settings
+		float _SubsurfDelta; // =1
+		float _SubsurfFactor; // =0.75
+
+		float _LambertFactor = 0.45;
+
+		float _SpecularPower; // 192
+		float _SpecularFactor; // 0.4
+
+		float _EmissionFactor;
 
 		//Add instancing support for this shader. You need to check Enable Instancing on materials that use the shader.
 		// See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
@@ -201,11 +225,11 @@ Shader "Custom/Ocean"
 			return lerp(b, a, fac);
 		}
 
-		float greaterThan(float n, float atLeast)
+		float greaterThan(float n, float atLeast, float m = 9999)
 		{
 			/*if (atLeast == -1) return n;
 			return n >= atLeast ? 1 : 0;*/
-			return saturate(99999 * (n - atLeast));
+			return saturate(m * (n - atLeast));
 		}
 
 		void surf(Input i, inout SurfaceOutputCustom o)
@@ -223,20 +247,22 @@ Shader "Custom/Ocean"
 			/*half4 skyData = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, i.worldRefl);
 			half3 skyColor = DecodeHDR(skyData, unity_SpecCube0_HDR);*/
 
-			float3 base = lerp(_BaseColor, _EdgeColor, 2 * (objectPos.y - 0.85));
+			float3 base = lerp(_BaseColor, _EdgeColor, saturate(_EdgeStart + _EdgeIncrease * objectPos.y));
 
-			float3 noise = tex2D(_NoiseMap, i.originalPos.xz * 0.015 + _Time[1] * float2(0.01, 0.02));
+			float3 seaUvOffset = tex2D(_SeaDistortion, i.originalPos.xz * 0.01 + i.worldPos.xz * 0.01 + _Time[1] * 0.4 * float2(0.01, 0.02));
+			
+			float2 voronoiUv1 = (i.originalPos.xz * 0.025 * 0.25 + i.worldPos.xz * 0.025 * 0.75);
+			float2 voronoiUv2 = (i.originalPos.xz * 0.004 + i.worldPos.xz * 0.028) + float2(0.5, 0.4) + seaUvOffset.rb * 0.075;
+			float3 voronoi1 = (greaterThan(tex2D(_Voronoi, voronoiUv1), 0.45)) * 0.4 * 2.6;
+			float3 voronoi2 = (greaterThan(tex2D(_Voronoi, voronoiUv2), 0.4)) * 0.4 * 2 * 0.2;
 
-			float2 voronoiUv1 = (i.originalPos.xz * 0.05 * 0.25 + i.worldPos.xz * 0.05 * 0.75) + _Time[1] * 0* float2(0.8, 1.1);
-			float2 voronoiUv2 = (i.originalPos.xz * 0.008 + i.worldPos.xz * 0.04) + float2(0.5, 0.4) + noise.rb * 0.5;
-			float3 voronoi1 = greaterThan(tex2D(_Voronoi, voronoiUv1 * 0.75), 0.6) * 0.4;
-			float3 voronoi2 = greaterThan(tex2D(_Voronoi, voronoiUv2 * 0.75), 0.6) * 0.4;
-
-			float foamAmount = saturate(0.4 * objectPos.y + 0.42) + 0.2;// * voronoi;
-			float texturedFoamAmount = greaterThan(foamAmount * voronoi1 * 2.6 + voronoi2 * 2, 0.7) * 0.8;
+			float foamAmount = max(0, 0.2 * objectPos.y + 1);
+			//float foamAmount = 1;
+			float texturedFoamAmount = greaterThan(foamAmount * voronoi1 + foamAmount * voronoi2, 1.05) * 0.8;
 			o.Albedo = lerp(base, 1.0, texturedFoamAmount);
-			//o.Albedo = noise;
+			//o.Albedo = voronoi1;
 			//o.Albedo = voronoi2;
+			//o.Albedo = foamAmount;
 			o.foam = texturedFoamAmount;
 		}
 
@@ -263,30 +289,27 @@ Shader "Custom/Ocean"
 
 		half4 LightingSubsurf(SurfaceOutputCustom s, half3 lightDir, half3 viewDir, half atten)
 		{
-			float delta = 0.8; // can be anywhere between 0 - 1
-
 			/*float3 normalMap = tex2D(_NormalMap, float2(i.worldPos.x, i.worldPos.z));
 			float3 normal = normalize(s.Normal + normalMap * 0.25);*/
 			float3 normal = s.Normal;
 
 			// lambert lighting
-			half NdotL = saturate(dot(normal, lightDir)) * 0.45;
+			half NdotL = saturate(dot(normal, lightDir)) * _LambertFactor;
 
 			// specular lighting
-			float specularity = 196.0;
 			float3 H = normalize(lightDir + viewDir);
-			float specularIntensity = pow(saturate(dot(H, normal)), specularity) * 0.4;
+			float specularIntensity = pow(saturate(dot(H, normal)), _SpecularPower) * _SpecularFactor;
 
 			// subsurface lighting
-			half VdotL = dot(viewDir, -(lightDir + normal * delta));
-			half IBack = pow(saturate(VdotL), 2) * 0.75;
+			half VdotL = dot(viewDir, -(lightDir + normal * _SubsurfDelta));
+			half IBack = pow(saturate(VdotL), 2) * _SubsurfFactor;
 
 			// combine lighting and return result
 			half4 c;
-			c.rgb = s.Albedo * _LightColor0.rgb * NdotL * atten * 0.35 +
+			c.rgb = s.Albedo * _LightColor0.rgb * NdotL * atten +
 				_LightColor0.rgb * specularIntensity * atten +
 				s.Albedo * _LightColor0.rgb * atten * IBack +
-				s.Albedo * _LightColor0.rgb * 0.25;
+				s.Albedo * _LightColor0.rgb * _EmissionFactor;
 			c.a = s.Alpha;
 
 			return lerp(c, foamLighting(s, lightDir, viewDir, atten), s.foam);
