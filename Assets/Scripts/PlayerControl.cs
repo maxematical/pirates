@@ -96,7 +96,7 @@ public class PlayerControl : ShipControl
         Caravel.TargetRudderTilt = rotateInput * 30;
 
         // Apply rotation force
-        Vector3 rotationForce = Vector3.left * rotateInput * _TurningForceMultiplier;
+        Vector3 rotationForce = -transform.right * rotateInput * _TurningForceMultiplier;
         _Rigidbody.AddForceAtPosition(rotationForce, _TurningForceCenter.transform.position);
     }
 
