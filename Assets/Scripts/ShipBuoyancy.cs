@@ -69,12 +69,15 @@ public class ShipBuoyancy : MonoBehaviour
         _WaterPatch._Center = transform.position;
         _WaterPatch.UpdatePatch(Time.time);
 
-        int forceCount = 0;
-        Vector3 forceCenter = Vector3.zero;
-        Vector3 totalForce = Vector3.zero;
+        float buoyantCount = 0;
+        Vector3 buoyantCenter = Vector3.zero;
+        Vector3 buoyantForce = Vector3.zero;
+
+        float dragCount = 0;
+        Vector3 dragCenter = Vector3.zero;
+        Vector3 dragForce = Vector3.zero;
 
         int torqueCount = 0;
-        Vector3 torqueCenter = Vector3.zero;
         Vector3 totalTorque = Vector3.zero;
 
         foreach (BuoyancySphere sphere in BuoyancySpheres)
@@ -90,51 +93,54 @@ public class ShipBuoyancy : MonoBehaviour
 
             if (filledVolume > 0)
             {
-                totalForce += Vector3.up * _Gravity * _Density * filledRatio;
-                forceCenter += filledCenter;
-                forceCount++;
+                buoyantForce += Vector3.up * _Gravity * _Density * filledRatio;
+                buoyantCenter += filledCenter * filledRatio;
+                buoyantCount += filledRatio;
             }
 
-            //totalForce += Vector3.down * _Gravity * forceProportion;
-            //forceCenter += filledCenter;
-            //forceCount++;
-
-            Vector3 v = Rigidbody.velocity + Vector3.Cross(Rigidbody.angularVelocity, sphereCenter - Rigidbody.worldCenterOfMass);//not causing shaking
+            Vector3 v = Rigidbody.velocity + Vector3.Cross(Rigidbody.angularVelocity, sphereCenter - Rigidbody.worldCenterOfMass);
 
             Vector3 waterCurrentVelocity = Vector3.zero;
-            //Rigidbody.AddForceAtPosition(_DragCoefficient * Rigidbody.mass * filledRatio * (waterCurrentVelocity - v), filledCenter);
-            totalForce += _DragCoefficient * Rigidbody.mass * filledRatio * (waterCurrentVelocity - v);
-            forceCenter += filledCenter;
-            forceCount++;
+            dragForce += _DragCoefficient * Rigidbody.mass * filledRatio * (waterCurrentVelocity - v);
+            dragCenter += filledCenter * filledRatio;
+            dragCount += filledRatio;
 
             totalTorque += _AngularDragCoefficient * Rigidbody.mass * filledRatio * _AverageWidth * _AverageWidth * -Rigidbody.angularVelocity;
-            torqueCenter += filledCenter;
             torqueCount++;
         }
 
-        Rigidbody.AddForce(Vector3.down * _Gravity);
-
-        if (forceCount > 0)
+        // Apply buoyant force
+        if (buoyantCount > 0)
         {
-            forceCenter /= forceCount;
-            totalForce /= BuoyancySpheres.Count;
-            Rigidbody.AddForce(totalForce);
-
-            Vector3 x = forceCenter - Rigidbody.worldCenterOfMass;
-            Vector3 torqueFromForces = x.sqrMagnitude > 0.1f || true ? Vector3.Cross(x, totalForce) : Vector3.zero;
-            Rigidbody.AddTorque(torqueFromForces);
+            // The center of the force is the average position
+            buoyantCenter /= buoyantCount;
+            // Note that we do not divide by buoyantCount here because then buoyantForce would always have a magnitude
+            // of (_Gravity*_Density). Instead we divide by BuoyancySpheres.Count, so that its magnitude varies but is
+            // never greater than (_Gravity*_Density).
+            buoyantForce /= BuoyancySpheres.Count;
+            Rigidbody.AddForceAtPosition(buoyantForce, buoyantCenter);
         }
-        //Rigidbody.AddForceAtPosition(totalForce, forceCenter);
 
+        // Apply drag force
+        if (BuoyancySpheres.Count > 0)
+        {
+            dragCenter /= dragCount;
+            dragForce /= BuoyancySpheres.Count;
+            Rigidbody.AddForceAtPosition(dragForce, dragCenter);
+        }
+
+        // Apply angular drag
         if (torqueCount > 0)
         {
-            torqueCenter /= torqueCount;
             totalTorque /= BuoyancySpheres.Count;
             Rigidbody.AddTorque(totalTorque);
         }
 
-        _gizmosForceCenter = forceCenter;
-        _gizmosTotalForce = totalForce - Vector3.down * _Gravity;
+        // Apply gravity
+        Rigidbody.AddForce(Vector3.down * _Gravity);
+
+        _gizmosForceCenter = buoyantCenter;
+        _gizmosTotalForce = buoyantForce - 0 * Vector3.down * _Gravity;
     }
 
     private void OnDrawGizmos()
@@ -153,7 +159,7 @@ public class ShipBuoyancy : MonoBehaviour
         // Other gizmos
         Gizmos.color = Color.blue;
 
-        if (_hullSamplePositions != null)
+        if (_hullSamplePositions != null && false)
         {
             Gizmos.matrix *= transform.localToWorldMatrix;
             foreach (Vector3 v in _hullSamplePositions)
@@ -189,7 +195,7 @@ public class ShipBuoyancy : MonoBehaviour
                     
                     Gizmos.DrawWireSphere(sphere.WorldPosition, sphere.radius);
 
-                    Gizmos.DrawSphere(CalculateFilledSphereCenter(sphere.WorldPosition, sphere.radius, waterHeight - sphere.WorldPosition.y + sphere.radius), 0.075f);
+                    Gizmos.DrawSphere(CalculateFilledSphereCenter(sphere.WorldPosition, sphere.radius, waterHeight - sphere.WorldPosition.y + sphere.radius), 0.25f * sphere.radius);
                 }
             }
         }
@@ -258,6 +264,11 @@ public class ShipBuoyancy : MonoBehaviour
         {
             _hullSamplePositions.Add((voxel.position));
         }
+
+        // Calculate average length along axis
+        transformedMesh.RecalculateBounds();
+        Vector3 size = transformedMesh.bounds.size;
+        _AverageWidth = (size.x + size.y + size.z) / 3f;
     }
 
     public float ComputeWaterHeight(Vector3 position, float time)
