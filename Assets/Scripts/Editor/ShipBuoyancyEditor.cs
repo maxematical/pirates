@@ -17,5 +17,12 @@ public class ShipBuoyancyEditor : Editor
             Undo.RecordObject(script, "Voxelize Hull");
             script.VoxelizeHull();
         }
+
+        if (GUILayout.Button("Reset Center of Mass"))
+        {
+            Undo.RecordObject(script, "Reset Center of Mass");
+
+            script._Rigidbody.ResetCenterOfMass();
+        }
     }
 }

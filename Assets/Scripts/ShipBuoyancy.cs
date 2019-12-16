@@ -9,11 +9,14 @@ public class ShipBuoyancy : MonoBehaviour
 {
     private const float EPSILON = 0.001f;
 
-    public Bounds ScanHullBounds;
-    public float SamplesResolution = 0.25f;
-
+    [Header("Components")]
     public WaterPatch _WaterPatch;
+    public Rigidbody _Rigidbody;
 
+    [Header("Center of Mass (optional)")]
+    public GameObject _CustomCenterOfMass;
+
+    [Header("Voxelization Settings")]
     public MeshFilter _Hull;
     public int _VoxelResolution;
     public float _SampleSizeMultiplier;
@@ -30,8 +33,6 @@ public class ShipBuoyancy : MonoBehaviour
     [Tooltip("The multiplier for the slamming force.")]
     public float _SlammingForce;
 
-    public Rigidbody Rigidbody;
-
     [SerializeField]
     [HideInInspector]
     private List<Vector3> _samplePositions;
@@ -45,6 +46,12 @@ public class ShipBuoyancy : MonoBehaviour
 
     private void Start()
     {
+        if (_CustomCenterOfMass != null)
+        {
+            Vector3 worldPos = _CustomCenterOfMass.transform.position;
+            Matrix4x4 mat = transform.worldToLocalMatrix;
+            _Rigidbody.centerOfMass = mat.MultiplyPoint3x4(worldPos);
+        }
     }
 
     void FixedUpdate()
@@ -85,24 +92,24 @@ public class ShipBuoyancy : MonoBehaviour
                 buoyantTotalWeight += filledRatio;
             }
 
-            Vector3 sphereVelocity = Rigidbody.velocity + Vector3.Cross(Rigidbody.angularVelocity, sphereCenter - Rigidbody.worldCenterOfMass);
+            Vector3 sphereVelocity = _Rigidbody.velocity + Vector3.Cross(_Rigidbody.angularVelocity, sphereCenter - _Rigidbody.worldCenterOfMass);
             Vector3 waterVelocity = Vector3.zero;
 
             Vector3 estimatedLastPosition = sphereCenter - sphereVelocity * _SlamEstimationTime;
             float estimatedLastBottom = estimatedLastPosition.y - _sampleRadius;
             if (waterHeight >= sphereBottom && waterHeight < estimatedLastBottom)
             {
-                Vector3 slam = -Vector3.up * (sphereVelocity.y * _SlammingForce);
+                Vector3 slam = Vector3.up * Mathf.Sqrt(-sphereVelocity.y) * _SlammingForce;
                 slammingForce += slam;
                 slammingTotalWeight += filledVolume;
                 slammingCenter += filledCenter * filledVolume;
             }
 
-            dragForce += _DragCoefficient * Rigidbody.mass * filledRatio * (waterVelocity - sphereVelocity);
+            dragForce += _DragCoefficient * _Rigidbody.mass * filledRatio * (waterVelocity - sphereVelocity);
             dragCenter += filledCenter * filledRatio;
             dragTotalWeight += filledRatio;
 
-            totalTorque += _AngularDragCoefficient * Rigidbody.mass * filledRatio * _AverageWidth * _AverageWidth * -Rigidbody.angularVelocity;
+            totalTorque += _AngularDragCoefficient * _Rigidbody.mass * filledRatio * _AverageWidth * _AverageWidth * -_Rigidbody.angularVelocity;
         }
 
         // Apply buoyant force
@@ -114,7 +121,7 @@ public class ShipBuoyancy : MonoBehaviour
             // of (_Gravity*_Density). Instead we divide by BuoyancySpheres.Count, so that its magnitude varies but is
             // never greater than (_Gravity*_Density).
             buoyantForce /= _samplePositions.Count;
-            Rigidbody.AddForceAtPosition(buoyantForce, buoyantCenter);
+            _Rigidbody.AddForceAtPosition(buoyantForce, buoyantCenter);
         }
 
         // Apply slamming force
@@ -122,7 +129,7 @@ public class ShipBuoyancy : MonoBehaviour
         {
             slammingCenter /= slammingTotalWeight;
             slammingForce /= _samplePositions.Count;
-            Rigidbody.AddForceAtPosition(slammingForce, slammingCenter);
+            _Rigidbody.AddForceAtPosition(slammingForce, slammingCenter);
         }
 
         // Apply drag force
@@ -130,25 +137,25 @@ public class ShipBuoyancy : MonoBehaviour
         {
             dragCenter /= dragTotalWeight;
             dragForce /= _samplePositions.Count;
-            Rigidbody.AddForceAtPosition(dragForce, dragCenter);
+            _Rigidbody.AddForceAtPosition(dragForce, dragCenter);
         }
 
         // Apply angular drag
         if (_samplePositions.Count > 0)
         {
             totalTorque /= _samplePositions.Count;
-            Rigidbody.AddTorque(totalTorque);
+            _Rigidbody.AddTorque(totalTorque);
         }
 
         // Apply gravity
-        Rigidbody.AddForce(Vector3.down * _Gravity);
+        _Rigidbody.AddForce(Vector3.down * _Gravity);
 
         // Save forces for gizmos
         _gizmosBuoyancyCenter = buoyantCenter;
         _gizmosBuoyancyForce = buoyantForce;
 
-        _gizmosBuoyancyCenter = slammingCenter;
-        _gizmosBuoyancyForce = slammingForce;
+        //_gizmosBuoyancyCenter = slammingCenter;
+        //_gizmosBuoyancyForce = slammingForce;
     }
 
     private void OnDrawGizmos()
@@ -164,29 +171,9 @@ public class ShipBuoyancy : MonoBehaviour
             return;
         }
 
-        // Other gizmos
-        Gizmos.color = Color.blue;
-
-        if (_samplePositions != null && false)
-        {
-            Gizmos.matrix *= transform.localToWorldMatrix;
-            foreach (Vector3 v in _samplePositions)
-            {
-                Gizmos.DrawWireSphere(v, _sampleRadius);
-            }
-            Gizmos.matrix *= transform.localToWorldMatrix.inverse;
-        }
-
-        if (ScanHullBounds != null)
-        {
-            Gizmos.matrix *= transform.localToWorldMatrix;
-            Gizmos.DrawWireCube(ScanHullBounds.center, ScanHullBounds.extents * 2);
-            Gizmos.matrix *= transform.localToWorldMatrix.inverse;
-        }
-
-        Gizmos.color = Color.red;
 
         // Draw water levels
+        Gizmos.color = Color.red;
         if (_samplePositions != null)
         {
             float time = Application.isPlaying ? Time.time : 0;
@@ -210,8 +197,11 @@ public class ShipBuoyancy : MonoBehaviour
 
         // Draw things from FixedUpdate
         Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(_gizmosBuoyancyCenter, 0.1f);
+        Gizmos.DrawSphere(_gizmosBuoyancyCenter, 0.2f);
         Gizmos.DrawRay(_gizmosBuoyancyCenter, _gizmosBuoyancyForce);
+
+        Gizmos.color = Color.magenta;
+        Gizmos.DrawSphere(_Rigidbody.worldCenterOfMass, 0.3f);
     }
 
     public void VoxelizeHull()
@@ -236,13 +226,19 @@ public class ShipBuoyancy : MonoBehaviour
         CPUVoxelizer.Voxelize(transformedMesh, _VoxelResolution, out voxels, out float voxelSize);
 
         // Save voxels to samples
+        Vector3 sampleCenter = Vector3.zero;
         _samplePositions.Clear();
         foreach (Voxel_t voxel in voxels)
         {
             _samplePositions.Add(voxel.position);
+            sampleCenter += voxel.position;
         }
 
+        // Save sample radius and center
         _sampleRadius = voxelSize * _SampleSizeMultiplier * 2.4f;
+
+        sampleCenter /= _samplePositions.Count;
+        _Rigidbody.centerOfMass = transform.worldToLocalMatrix.MultiplyPoint3x4(sampleCenter);
 
         // Calculate average length along axis
         transformedMesh.RecalculateBounds();
