@@ -224,6 +224,7 @@ public class ShipBuoyancy : MonoBehaviour
         // Voxelize the mesh
         List<Voxel_t> voxels;
         CPUVoxelizer.Voxelize(transformedMesh, _VoxelResolution, out voxels, out float voxelSize);
+        SymmetrizeVoxels(voxels);
 
         // Save voxels to samples
         Vector3 sampleCenter = Vector3.zero;
@@ -319,6 +320,48 @@ public class ShipBuoyancy : MonoBehaviour
         Vector3 volumeCenter = center;
         volumeCenter.y += 2 * R * t - R;
         return volumeCenter;
+    }
+
+    private void SymmetrizeVoxels(List<Voxel_t> voxels)
+    {
+        // Calculate the center of the voxels
+        Vector3 center = Vector3.zero;
+        foreach (Voxel_t voxel in voxels)
+        {
+            center += voxel.position;
+        }
+        center /= voxels.Count;
+
+        // Create a list of previous voxels whose x-values are left or equal to center
+        List<Voxel_t> sideVoxels = new List<Voxel_t>(voxels.Count);
+        foreach (Voxel_t voxel in voxels)
+        {
+            if (voxel.position.x <= center.x + EPSILON)
+            {
+                sideVoxels.Add(voxel);
+            }
+        }
+
+        // Clear the voxels and only add the ones whose x-value is left or equal to center
+        voxels.Clear();
+        foreach (Voxel_t sideVoxel in sideVoxels)
+        {
+            // Add the voxel for this side into the result
+            voxels.Add(sideVoxel);
+
+            // Add the opposite side voxel into the result
+            // (Only do this if the voxel isn't along the center line)
+            if (!Eq(sideVoxel.position.x, center.x))
+            {
+                Vector3 reversePosition = sideVoxel.position;
+                reversePosition.x = -reversePosition.x;
+
+                Voxel_t reverseVoxel = sideVoxel;
+                reverseVoxel.position = reversePosition;
+
+                voxels.Add(reverseVoxel);
+            }
+        }
     }
 
     private static bool Eq(float x, float y)
