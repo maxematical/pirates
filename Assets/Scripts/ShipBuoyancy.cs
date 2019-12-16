@@ -17,12 +17,18 @@ public class ShipBuoyancy : MonoBehaviour
     public MeshFilter _Hull;
     public int _VoxelResolution;
     public float _SampleSizeMultiplier;
-
+    
+    [Header("Physics Settings")]
     public float _Gravity;
     public float _Density;
     public float _DragCoefficient;
     public float _AngularDragCoefficient;
     public float _AverageWidth;
+
+    [Tooltip("The amount of time to estimate y-position in the past. Larger values will make the slamming action more spread out over time.")]
+    public float _SlamEstimationTime;
+    [Tooltip("The multiplier for the slamming force.")]
+    public float _SlammingForce;
 
     public Rigidbody Rigidbody;
 
@@ -46,15 +52,18 @@ public class ShipBuoyancy : MonoBehaviour
         _WaterPatch._Center = transform.position;
         _WaterPatch.UpdatePatch(Time.time);
 
-        float buoyantCount = 0;
+        float buoyantTotalWeight = 0;
         Vector3 buoyantCenter = Vector3.zero;
         Vector3 buoyantForce = Vector3.zero;
 
-        float dragCount = 0;
+        float dragTotalWeight = 0;
         Vector3 dragCenter = Vector3.zero;
         Vector3 dragForce = Vector3.zero;
 
-        int torqueCount = 0;
+        float slammingTotalWeight = 0;
+        Vector3 slammingCenter = Vector3.zero;
+        Vector3 slammingForce = Vector3.zero;
+        
         Vector3 totalTorque = Vector3.zero;
 
         foreach (Vector3 localCenter in _samplePositions)
@@ -73,25 +82,34 @@ public class ShipBuoyancy : MonoBehaviour
             {
                 buoyantForce += Vector3.up * _Gravity * _Density * filledRatio;
                 buoyantCenter += filledCenter * filledRatio;
-                buoyantCount += filledRatio;
+                buoyantTotalWeight += filledRatio;
             }
 
-            Vector3 v = Rigidbody.velocity + Vector3.Cross(Rigidbody.angularVelocity, sphereCenter - Rigidbody.worldCenterOfMass);
+            Vector3 sphereVelocity = Rigidbody.velocity + Vector3.Cross(Rigidbody.angularVelocity, sphereCenter - Rigidbody.worldCenterOfMass);
+            Vector3 waterVelocity = Vector3.zero;
 
-            Vector3 waterCurrentVelocity = Vector3.zero;
-            dragForce += _DragCoefficient * Rigidbody.mass * filledRatio * (waterCurrentVelocity - v);
+            Vector3 estimatedLastPosition = sphereCenter - sphereVelocity * _SlamEstimationTime;
+            float estimatedLastBottom = estimatedLastPosition.y - _sampleRadius;
+            if (waterHeight >= sphereBottom && waterHeight < estimatedLastBottom)
+            {
+                Vector3 slam = -Vector3.up * (sphereVelocity.y * _SlammingForce);
+                slammingForce += slam;
+                slammingTotalWeight += filledVolume;
+                slammingCenter += filledCenter * filledVolume;
+            }
+
+            dragForce += _DragCoefficient * Rigidbody.mass * filledRatio * (waterVelocity - sphereVelocity);
             dragCenter += filledCenter * filledRatio;
-            dragCount += filledRatio;
+            dragTotalWeight += filledRatio;
 
             totalTorque += _AngularDragCoefficient * Rigidbody.mass * filledRatio * _AverageWidth * _AverageWidth * -Rigidbody.angularVelocity;
-            torqueCount++;
         }
 
         // Apply buoyant force
-        if (buoyantCount > 0)
+        if (buoyantTotalWeight > 0 && _samplePositions.Count > 0)
         {
             // The center of the force is the average position
-            buoyantCenter /= buoyantCount;
+            buoyantCenter /= buoyantTotalWeight;
             // Note that we do not divide by buoyantCount here because then buoyantForce would always have a magnitude
             // of (_Gravity*_Density). Instead we divide by BuoyancySpheres.Count, so that its magnitude varies but is
             // never greater than (_Gravity*_Density).
@@ -99,16 +117,24 @@ public class ShipBuoyancy : MonoBehaviour
             Rigidbody.AddForceAtPosition(buoyantForce, buoyantCenter);
         }
 
-        // Apply drag force
-        if (_samplePositions.Count > 0)
+        // Apply slamming force
+        if (slammingTotalWeight > 0 && _samplePositions.Count > 0)
         {
-            dragCenter /= dragCount;
+            slammingCenter /= slammingTotalWeight;
+            slammingForce /= _samplePositions.Count;
+            Rigidbody.AddForceAtPosition(slammingForce, slammingCenter);
+        }
+
+        // Apply drag force
+        if (dragTotalWeight > 0 && _samplePositions.Count > 0)
+        {
+            dragCenter /= dragTotalWeight;
             dragForce /= _samplePositions.Count;
             Rigidbody.AddForceAtPosition(dragForce, dragCenter);
         }
 
         // Apply angular drag
-        if (torqueCount > 0)
+        if (_samplePositions.Count > 0)
         {
             totalTorque /= _samplePositions.Count;
             Rigidbody.AddTorque(totalTorque);
@@ -120,6 +146,9 @@ public class ShipBuoyancy : MonoBehaviour
         // Save forces for gizmos
         _gizmosBuoyancyCenter = buoyantCenter;
         _gizmosBuoyancyForce = buoyantForce;
+
+        _gizmosBuoyancyCenter = slammingCenter;
+        _gizmosBuoyancyForce = slammingForce;
     }
 
     private void OnDrawGizmos()

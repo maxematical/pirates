@@ -547,6 +547,8 @@ MonoBehaviour:
   _DragCoefficient: 4
   _AngularDragCoefficient: 1
   _AverageWidth: 3.358125
+  _SlamEstimationTime: 0
+  _SlammingForce: 0
   Rigidbody: {fileID: 765587203}
   _samplePositions:
   - {x: -1.0437332, y: 0.5762944, z: -1.6791947}
@@ -1218,10 +1220,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _Ocean: {fileID: 1059587822}
-  _VertexWidth: 22
-  _VertexLength: 22
+  _VertexWidth: 14
+  _VertexLength: 14
   _Center: {x: 0, y: 0, z: 0}
-  _Scale: 0.3
+  _Scale: 0.5
 --- !u!1 &806464976
 GameObject:
   m_ObjectHideFlags: 0
@@ -1313,10 +1315,12 @@ MonoBehaviour:
   _VoxelResolution: 10
   _SampleSizeMultiplier: 1
   _Gravity: 9.81
-  _Density: 1.5
-  _DragCoefficient: 2
+  _Density: 1.75
+  _DragCoefficient: 1
   _AngularDragCoefficient: 6
   _AverageWidth: 0.32679814
+  _SlamEstimationTime: 0.1
+  _SlammingForce: 30
   Rigidbody: {fileID: 892890629}
   _samplePositions:
   - {x: -0.33876425, y: -0.08412932, z: 0.029398158}
@@ -1944,6 +1948,8 @@ MonoBehaviour:
   _DragCoefficient: 1
   _AngularDragCoefficient: 1
   _AverageWidth: 0.50000006
+  _SlamEstimationTime: 0
+  _SlammingForce: 0
   Rigidbody: {fileID: 1260955456}
   _samplePositions: []
   _sampleRadius: 0
@@ -2276,6 +2282,8 @@ MonoBehaviour:
   _DragCoefficient: 2
   _AngularDragCoefficient: 6
   _AverageWidth: 0.32679817
+  _SlamEstimationTime: 0
+  _SlammingForce: 0
   Rigidbody: {fileID: 1868449174}
   _samplePositions:
   - {x: -0.45168567, y: 0.028792076, z: -0.008242339}
