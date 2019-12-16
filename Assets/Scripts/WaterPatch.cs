@@ -64,6 +64,9 @@ public class WaterPatch : MonoBehaviour
         int zInt = Mathf.FloorToInt(z);
         var (xIdx, zIdx) = WorldToIndex(x, z);
 
+        if (!Application.isPlaying && (xIdx < 0 || xIdx >= _VertexWidth || zIdx < 0 || zIdx >= _VertexLength))
+            return 0;
+
         float h00 = _heightValues[xIdx + zIdx * _VertexWidth];
         float h01 = zIdx + 1 < _VertexLength ? _heightValues[xIdx + (zIdx + 1) * _VertexWidth] : h00;
         float h10 = xIdx + 1 < _VertexWidth ? _heightValues[(xIdx + 1) + zIdx * _VertexWidth] : h00;
@@ -137,7 +140,7 @@ public class WaterPatch : MonoBehaviour
 
     private float EstimateHeight(Vector3 position, float time)
     {
-        return 0;
+        //return 0;
 
         // Note: this is an estimate! However, it is usually very accurate.
         Vector3 xzOffset = _Ocean.TransformVertex(position, time) - position;
