@@ -12,6 +12,13 @@ public class PlayerControl : ShipControl
     public GameObject CannonballSpawnR;
 
     public CaravelModelController Caravel;
+    public Rigidbody _Rigidbody;
+
+    public GameObject _WindForceCenter;
+    public float _WindMultiplier;
+
+    public GameObject _TurningForceCenter;
+    public float _TurningForceMultiplier;
 
     [Tooltip("The maximum horizontal angle that cannonballs can be fired from, measured from the helm/stern, in degrees")]
     public float MaxFiringAngle;
@@ -58,7 +65,7 @@ public class PlayerControl : ShipControl
 
         Quaternion nextRotation = Quaternion.AngleAxis(nextHeading, Vector3.up);
         nextRotation = Quaternion.AngleAxis(nextRoll, nextRotation * Vector3.forward) * nextRotation;
-        transform.rotation = nextRotation;
+        //transform.rotation = nextRotation;
     }
 
     private void HandleRotationInput()
@@ -87,6 +94,10 @@ public class PlayerControl : ShipControl
 
         // Animate model
         Caravel.TargetRudderTilt = rotateInput * 30;
+
+        // Apply rotation force
+        Vector3 rotationForce = Vector3.left * rotateInput * _TurningForceMultiplier;
+        _Rigidbody.AddForceAtPosition(rotationForce, _TurningForceCenter.transform.position);
     }
 
     private void HandleFireInput()
@@ -140,6 +151,13 @@ public class PlayerControl : ShipControl
         float turnFactor = Mathf.Abs(_angularVelocity) / MaxRotationSpeed; // 0 = not turning at all, 1 = turning at maximum rate
         Speed = (1.0f - turnFactor * RotationSpeedReduction) * BaseSpeed;
         base.FixedUpdate();
+
+        Vector3 windForce = transform.forward * Speed * _WindMultiplier;
+        _Rigidbody.AddForceAtPosition(windForce, _WindForceCenter.transform.position);
+
+        Vector3 velocityXZ = _Rigidbody.velocity;
+        velocityXZ.y = 0;
+        //Debug.Log(velocityXZ.magnitude + " / " + Speed);
     }
 
     private float ComputeRoll()
