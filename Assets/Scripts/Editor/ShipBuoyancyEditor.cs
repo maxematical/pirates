@@ -24,5 +24,14 @@ public class ShipBuoyancyEditor : Editor
 
             script._Rigidbody.ResetCenterOfMass();
         }
+
+        EditorGUI.BeginDisabledGroup(!Application.isPlaying);
+        if (GUILayout.Button("Sink"))
+        {
+            script._Density = 0.95f;
+            script._DragCoefficient = 2f;
+            script._AngularDragCoefficient = 0.5f;
+        }
+        EditorGUI.EndDisabledGroup();
     }
 }
