@@ -7,6 +7,7 @@ public class Cannonball : MonoBehaviour
     public float Gravity { get; set; }
     public Vector3 Velocity { get; set; }
     public GameObject IgnoreCollisions;
+    public GameObject CollisionVFXPrefab;
     
     void Start()
     {
@@ -24,17 +25,41 @@ public class Cannonball : MonoBehaviour
         }
     }
 
-    void OnTriggerEnter(Collider otherCollider)
+    void OnCollisionEnter(Collision collision)
     {
-        if (otherCollider.gameObject == IgnoreCollisions)
+        // Find ShipHealth component in the object's highest parent
+        Transform obj = collision.gameObject.transform;
+        while (obj.parent != null)
+            obj = obj.parent;
+        ShipHealth health = obj.GetComponent<ShipHealth>();
+
+        if (health?.gameObject == IgnoreCollisions)
         {
             return;
         }
-        ShipHealth health = otherCollider.GetComponent<ShipHealth>();
+
         if (health != null)
         {
             health.Health--;
             Destroy(this.gameObject);
+
+            ContactPoint contact = collision.contacts[0];
+            Vector3 vfxDirection = contact.normal;
+            vfxDirection.y = Util.Cap(vfxDirection.y, 0.2f);
+            vfxDirection.Normalize();
+
+            GameObject vfx = Instantiate(CollisionVFXPrefab, contact.point, Quaternion.identity);
+            vfx.transform.rotation = Quaternion.LookRotation(vfxDirection, Vector3.up);
+
+            ParticleSystem particles = vfx.GetComponentInChildren<ParticleSystem>();
+            var particleLifetime = particles.main.startLifetime;
+            float vfxTime = particles.main.duration + particleLifetime.constant;
+            Destroy(vfx, vfxTime);
+
+            var velocityModule = particles.velocityOverLifetime;
+            velocityModule.x = health.Velocity.x * 10;
+            velocityModule.y = health.Velocity.y * 10;
+            velocityModule.z = health.Velocity.z * 10;
         }
     }
 }

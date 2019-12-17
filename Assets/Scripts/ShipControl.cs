@@ -15,14 +15,11 @@ public class ShipControl : MonoBehaviour
 
     protected virtual void FixedUpdate()
     {
-        float heading = transform.rotation.eulerAngles.y;
-        Vector3 velocity = Speed * transform.forward;
-        transform.position += velocity * Time.fixedDeltaTime;
+        transform.position += Velocity * Time.fixedDeltaTime;
     }
 
-    public Vector3 CalculateCannonballTrajectory(Vector3 spawnPos, Vector3 target, float speed, float gravity)
+    public static (float, float) CalculateCannonAim(Vector3 position, Vector3 target, float speed, float gravity)
     {
-        Vector3 position = this.transform.position;
         float yawAngle = -Mathf.Atan2(target.z - position.z, target.x - position.x) * Mathf.Rad2Deg + 90;
 
         // We want the cannonball to land on a specific spot on the map
@@ -37,6 +34,12 @@ public class ShipControl : MonoBehaviour
             pitchAngle = 45;
         }
 
+        return (yawAngle, pitchAngle);
+    }
+
+    public static Vector3 CalculateCannonballTrajectory(Vector3 position, Vector3 target, float speed, float gravity)
+    {
+        var (yawAngle, pitchAngle) = CalculateCannonAim(position, target, speed, gravity);
         return Quaternion.Euler(-pitchAngle, yawAngle, 0) * Vector3.forward * speed;
     }
 

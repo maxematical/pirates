@@ -11,11 +11,15 @@ public class PlayerControl : ShipControl
     public GameObject CannonballSpawnL;
     public GameObject CannonballSpawnR;
 
+    public CaravelModelController Caravel;
+
     [Tooltip("The maximum horizontal angle that cannonballs can be fired from, measured from the helm/stern, in degrees")]
     public float MaxFiringAngle;
 
     public float CannonballSpeed;
     public float CannonballGravity;
+
+    public float ReloadTime;
 
     [Header("Controls Settings")]
     [Tooltip("Max rotation speed in deg/s")]
@@ -82,6 +86,14 @@ public class PlayerControl : ShipControl
         {
             _angularVelocity = 0;
         }
+
+        // Animate model
+        Caravel.TargetRudderTilt = rotateInput * 30;
+        Caravel.TargetAimPos = GetMouseoverPosition() ?? Vector3.zero;
+        Caravel.CannonballSpeed = CannonballSpeed;
+        Caravel.CannonballGravity = CannonballGravity;
+        Caravel.CannonMaxFiringAngle = MaxFiringAngle;
+        Caravel.Velocity = Velocity;
     }
 
     private void HandleFireInput()
@@ -107,8 +119,21 @@ public class PlayerControl : ShipControl
                     return;
                 }
 
-                GameObject spawner = relativeAngle <= 0 ? CannonballSpawnL : CannonballSpawnR;
-                Vector3 spawnPos = spawner.transform.position;
+                int cannonIndex = relativeAngle <= 0 ?
+                    Caravel.GetNextLeftCannonIndex() :
+                    Caravel.GetNextRightCannonIndex();
+                var cannon = Caravel.GetCannon(cannonIndex);
+
+                // Check that we can fire the cannon (aren't reloading)
+                float timeSinceFired = Time.time - cannon.LastFireTime;
+                if (timeSinceFired < ReloadTime)
+                {
+                    return;
+                }
+                cannon.LastFireTime = Time.time;
+
+                // Fire a cannonball from the cannon
+                Vector3 spawnPos = cannon.SpawnPos.transform.position;
 
                 GameObject instantiated = Instantiate(CannonballPrefab, spawnPos, Quaternion.identity);
                 Vector3 cannonballVelocity = CalculateCannonballTrajectory(spawnPos, target, CannonballSpeed, CannonballGravity) + this.Velocity;
@@ -117,6 +142,8 @@ public class PlayerControl : ShipControl
                 cannonball.Velocity = cannonballVelocity;
                 cannonball.Gravity = CannonballGravity;
                 cannonball.IgnoreCollisions = this.gameObject;
+
+                Caravel.PlayCannonEffects(cannonIndex);
             }
         }
     }
