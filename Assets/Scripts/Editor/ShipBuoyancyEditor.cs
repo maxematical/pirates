@@ -12,25 +12,25 @@ public class ShipBuoyancyEditor : Editor
 
         ShipBuoyancy script = (ShipBuoyancy)target;
 
-        // Later we can add a fancy layer mask dropdown like this:
-        // https://answers.unity.com/questions/42996/how-to-create-layermask-field-in-a-custom-editorwi.html
-
-        bool disableComputeSamples = false;
-        if (LayerMask.NameToLayer(script.RaycastLayer) < 0)
+        if (GUILayout.Button("Voxelize Hull"))
         {
-            GUILayout.Label("WARNING: No layer called '" + script.RaycastLayer + "'");
-            disableComputeSamples = true;
-        }
-        else if (script.RaycastLayer == "")
-        {
-            GUILayout.Label("WARNING: Layer field is empty");
-            disableComputeSamples = true;
+            Undo.RecordObject(script, "Voxelize Hull");
+            script.VoxelizeHull();
         }
 
-        EditorGUI.BeginDisabledGroup(disableComputeSamples);
-        if (GUILayout.Button("Compute Samples"))
+        if (GUILayout.Button("Reset Center of Mass"))
         {
-            script.ComputeHullSamples();
+            Undo.RecordObject(script, "Reset Center of Mass");
+
+            script._Rigidbody.ResetCenterOfMass();
+        }
+
+        EditorGUI.BeginDisabledGroup(!Application.isPlaying);
+        if (GUILayout.Button("Sink"))
+        {
+            script._Density = 0.95f;
+            script._DragCoefficient = 2f;
+            script._AngularDragCoefficient = 0.5f;
         }
         EditorGUI.EndDisabledGroup();
     }

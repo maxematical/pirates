@@ -90,22 +90,26 @@ public class Ocean : MonoBehaviour
         }
     }
 
-    private Vector3 TransformVertex(Vector3 vertex, float time)
+    public Vector3 TransformVertex(Vector3 vertex, float time)
     {
         Vector3 xz = new Vector3(vertex.x, 0, vertex.z);
+
+        // TODO Actually calculate the vertex position, right now we are acting as if the ocean is a flat plane (which it is not).
+        // The actual calculation is somewhat computationally expensive if we are running it multiple times for all triangles on
+        // the hull, so in the future we should find some way to optimize/cache this data.
+        //return xz;
 
         float sumX = vertex.x;
         float sumZ = vertex.z;
         float sumY = 0;
         foreach (WaveSettings wave in Waves)
         {
-            sumX += wave.Steepness * wave.Amplitude * wave.Direction.x * Mathf.Cos(Vector3.Dot(wave.Frequency * wave.Direction, xz) + wave.PhaseConstant * time);
-            sumZ += wave.Steepness * wave.Amplitude * wave.Direction.z * Mathf.Cos(Vector3.Dot(wave.Frequency * wave.Direction, xz) + wave.PhaseConstant * time);
-            sumY += wave.Amplitude * Mathf.Sin(Vector3.Dot(wave.Frequency * wave.Direction, xz) + wave.PhaseConstant * time);
+            sumX += wave.Steepness * wave.Amplitude * wave.Direction.x * (float)Math.Cos(Vector3.Dot(wave.Frequency * wave.Direction, xz) + wave.PhaseConstant * time);
+            sumZ += wave.Steepness * wave.Amplitude * wave.Direction.z * (float)Math.Cos(Vector3.Dot(wave.Frequency * wave.Direction, xz) + wave.PhaseConstant * time);
+            sumY += wave.Amplitude * (float)Math.Sin(Vector3.Dot(wave.Frequency * wave.Direction, xz) + wave.PhaseConstant * time);
         }
 
-        //return new Vector3(sumX, sumY, sumZ);
-        return vertex;
+        return new Vector3(sumX, sumY, sumZ);
     }
 
     private Vector3 GetVertexNormal(Vector3 initial, Vector3 transformed, float time)
