@@ -252,6 +252,24 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 2013807524}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &236834429 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2086614060029268683, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &244817202 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4471533937044915798, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &348697952 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -6794828516552355126, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &353340806
 GameObject:
   m_ObjectHideFlags: 0
@@ -474,6 +492,12 @@ Transform:
   m_Father: {fileID: 1738920858}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &459324854 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8266831765009731903, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &485863260
 GameObject:
   m_ObjectHideFlags: 0
@@ -504,6 +528,12 @@ Transform:
   m_Father: {fileID: 806464977}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &503533264 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -8062619996377008127, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &509609044 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1173702418961526531, guid: f1e645c94fe42534bab22bc03b1f9bb5,
@@ -560,6 +590,12 @@ Transform:
   m_Father: {fileID: 806464977}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &595241852 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -7488033586124475434, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &608032980
 GameObject:
   m_ObjectHideFlags: 0
@@ -2983,6 +3019,7 @@ MonoBehaviour:
   _Rigidbody: {fileID: 765587203}
   _WindForceCenter: {fileID: 608032980}
   _DebugText: {fileID: 1315535439}
+  ReloadTime: 0
   _WindMultiplier: 80
   _TurningSpeed: 20
   _TurningTorque: 0.1
@@ -3050,6 +3087,18 @@ MonoBehaviour:
   _VertexLength: 16
   _Center: {x: 0, y: 0, z: 0}
   _Scale: 0.825
+--- !u!1 &770294248 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -939863090588012553, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &791020648 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -8477566461321163511, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &806464976
 GameObject:
   m_ObjectHideFlags: 0
@@ -3299,6 +3348,12 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &954843559 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5007049084745589701, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -3560,6 +3615,12 @@ Mesh:
     offset: 0
     size: 0
     path: 
+--- !u!1 &1030738951 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5041841721079629830, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1059587820
 GameObject:
   m_ObjectHideFlags: 0
@@ -3735,6 +3796,18 @@ Transform:
   m_Father: {fileID: 765587204}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1114812285 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -2340861884857922486, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1161388882 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 411955653488278110, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1251826050 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -485227329028488799, guid: f1e645c94fe42534bab22bc03b1f9bb5,
@@ -4013,6 +4086,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1315535437}
   m_CullTransparentMesh: 0
+--- !u!1 &1323349062 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3981379126022457609, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1327320818 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -2487197557848021317, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1330306992 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4565211952562884219, guid: f1e645c94fe42534bab22bc03b1f9bb5,
@@ -4112,6 +4197,12 @@ Transform:
   m_Father: {fileID: 1260955455}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1533428425 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 953720739551053729, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1553476129
 GameObject:
   m_ObjectHideFlags: 0
@@ -4205,6 +4296,12 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 14
   m_Mesh: {fileID: 1017354633590729971, guid: f1e645c94fe42534bab22bc03b1f9bb5, type: 3}
+--- !u!1 &1600487919 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5259296522517909275, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1738920858 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2746204541335648932, guid: f1e645c94fe42534bab22bc03b1f9bb5,
@@ -4241,6 +4338,18 @@ Transform:
   m_Father: {fileID: 806464977}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1756675054 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -8212895692345839748, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1757692318 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8965319912851080720, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1868449170
 GameObject:
   m_ObjectHideFlags: 0
@@ -4369,6 +4478,34 @@ MonoBehaviour:
   Rudder: {fileID: 1251826050}
   RudderAxis: {fileID: 135755857}
   RudderTiltSpeed: 100
+  Cannons:
+  - Barrel: {fileID: 459324854}
+    Base: {fileID: 954843559}
+    SpawnPos: {fileID: 1323349062}
+    IsRightSide: 0
+  - Barrel: {fileID: 1327320818}
+    Base: {fileID: 1030738951}
+    SpawnPos: {fileID: 244817202}
+    IsRightSide: 0
+  - Barrel: {fileID: 1533428425}
+    Base: {fileID: 1161388882}
+    SpawnPos: {fileID: 1600487919}
+    IsRightSide: 0
+  - Barrel: {fileID: 503533264}
+    Base: {fileID: 770294248}
+    SpawnPos: {fileID: 595241852}
+    IsRightSide: 1
+  - Barrel: {fileID: 1756675054}
+    Base: {fileID: 236834429}
+    SpawnPos: {fileID: 1114812285}
+    IsRightSide: 1
+  - Barrel: {fileID: 791020648}
+    Base: {fileID: 1757692318}
+    SpawnPos: {fileID: 348697952}
+    IsRightSide: 1
+  FireVFXPrefab: {fileID: 7931700058953922575, guid: 1ac582662eff6ff4fa6090eed3fdfbf2,
+    type: 3}
+  FireVFXScale: 0.25
 --- !u!4 &1991377357 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4216859302048453862, guid: f1e645c94fe42534bab22bc03b1f9bb5,
@@ -4507,13 +4644,13 @@ MonoBehaviour:
     TimeToTarget: 0.05
     CannonRange: 80
     CannonAngle: 60
-    ReloadSpeed:
-      Min: 1.25
-      Max: 1.75
+    ReloadTime: 0
+    FireInterval: 0
     CannonballGravity: 3
     CannonballSpeed: 5
   CannonballPrefab: {fileID: 2108215847276787037, guid: 6d84d27bb4a9944418c2657b1007627d,
     type: 3}
+  Caravel: {fileID: 0}
 --- !u!1001 &2013807524
 PrefabInstance:
   m_ObjectHideFlags: 0
