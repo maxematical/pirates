@@ -11,11 +11,11 @@ public class AiControl : ShipControl
     public GameObject CannonballPrefab;
     public CaravelModelController Caravel;
 
-    public float TimeUntilReloaded { get; set; }
-
     private AiHelper _helper;
     private AiState _state;
     private float _angularVelocity;
+
+    private float _lastFireTime;
 
     void Start()
     {
@@ -23,14 +23,11 @@ public class AiControl : ShipControl
         _state = new PursueState(this, _helper);
         _angularVelocity = 0;
 
-        TimeUntilReloaded = 0;
+        _lastFireTime = float.MinValue;
     }
 
     void Update()
     {
-        // Update reload
-        TimeUntilReloaded = Mathf.Max(0, TimeUntilReloaded - Time.deltaTime);
-
         // Update state
         AiState nextState = _state.Update();
 
@@ -218,9 +215,9 @@ public class AiControl : ShipControl
 
         private void TryFireCannons()
         {
-            if (_ai.TimeUntilReloaded > 0)
+            //if (_ai.TimeUntilReloaded > 0 && false)
             {
-                return;
+            //    return;
             }
 
             // Check that we aren't at too extreme an angle to fire (e.g. don't fire off the bow of the ship)
@@ -244,6 +241,15 @@ public class AiControl : ShipControl
                     _ai.Caravel.GetNextLeftCannonIndex() :
                     _ai.Caravel.GetNextRightCannonIndex();
                 var cannon = _ai.Caravel.GetCannon(cannonIndex);
+
+                if (Time.time - cannon.LastFireTime < _ai.Settings.ReloadTime ||
+                    Time.time - _ai._lastFireTime < _ai.Settings.FireInterval)
+                {
+                    return;
+                }
+                cannon.LastFireTime = Time.time;
+                _ai._lastFireTime = Time.time;
+
                 Vector3 spawnPos = cannon.SpawnPos.transform.position;
 
                 // Basic velocity prediction
@@ -257,7 +263,7 @@ public class AiControl : ShipControl
 
                 Vector3 predictedTargetPos = Vector3.zero; // will be initialized in the for-loop
                 float predictedTime = _ai.PredictCannonballTime(spawnPos, _h.TargetPos, _h.Settings.CannonballSpeed, _h.Settings.CannonballGravity);
-                for (int i = 0; i < 3; i++)
+                for (int i = 0; i < 25; i++)
                 {
                     predictedTargetPos = _h.TargetPos + predictedTime * _h.TargetVelocity;
                     predictedTime = _ai.PredictCannonballTime(spawnPos, predictedTargetPos, _h.Settings.CannonballSpeed, _h.Settings.CannonballGravity);
@@ -271,8 +277,6 @@ public class AiControl : ShipControl
                 cannonball.IgnoreCollisions = _h.Self;
 
                 _ai.Caravel.PlayCannonEffects(cannonIndex);
-
-                _ai.TimeUntilReloaded = _ai.Settings.ReloadSpeed.RandomInRange;
             }
         }
     }
@@ -331,7 +335,10 @@ public class AiControl : ShipControl
         [Header("Cannon Settings")]
         public float CannonRange;
         public float CannonAngle;
-        public RangeFloat ReloadSpeed;
+        [Tooltip("The reload time in seconds for one individual cannon.")]
+        public float ReloadTime;
+        [Tooltip("The AI will wait at least this long in between firing another cannon shot.")]
+        public float FireInterval;
 
         public float CannonballGravity;
         public float CannonballSpeed;
