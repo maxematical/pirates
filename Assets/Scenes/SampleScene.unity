@@ -2981,20 +2981,15 @@ MonoBehaviour:
   CannonballSpawnR: {fileID: 897651563}
   Caravel: {fileID: 1991377356}
   _Rigidbody: {fileID: 765587203}
-  _DebugText: {fileID: 1315535439}
   _WindForceCenter: {fileID: 608032980}
+  _DebugText: {fileID: 1315535439}
   _WindMultiplier: 80
   _TurningSpeed: 20
   _TurningTorque: 0.1
+  RotationSpeedReduction: 0.15
   MaxFiringAngle: 30
   CannonballSpeed: 15
   CannonballGravity: 3
-  MaxRotationSpeed: 45
-  RotationAcceleration: 130
-  RotationDamping: 0.99
-  RotationSpeedReduction: 0
-  MaxRollSpeed: 90
-  MaxRoll: 10
   _CannonPushForce: 1.5
   _CannonForceDecay: 3
   _MaxCannonTorque: 3

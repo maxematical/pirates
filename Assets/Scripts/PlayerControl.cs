@@ -8,107 +8,63 @@ public class PlayerControl : ShipControl
 {
     public float BaseSpeed;
 
+    [Header("Prefabs")]
     public GameObject CannonballPrefab;
+
+    [Header("Components and Children")]
     public GameObject CannonballSpawnL;
     public GameObject CannonballSpawnR;
-
     public CaravelModelController Caravel;
     public Rigidbody _Rigidbody;
+    public GameObject _WindForceCenter;
 
     public Text _DebugText;
 
-    public GameObject _WindForceCenter;
+    [Header("Controls Settings")]
     public float _WindMultiplier;
-
     [Tooltip("The turning speed, in deg/s")]
     public float _TurningSpeed;
     public float _TurningTorque;
-
-    [Tooltip("The maximum horizontal angle that cannonballs can be fired from, measured from the helm/stern, in degrees")]
-    public float MaxFiringAngle;
-
-    public float CannonballSpeed;
-    public float CannonballGravity;
-
-    [Header("Controls Settings")]
-    [Tooltip("Max rotation speed in deg/s")]
-    public float MaxRotationSpeed;
-
-    [Tooltip("Max rotation acceleration in deg/s^2")]
-    public float RotationAcceleration;
-
-    [Tooltip("Percent of angular velocity lost, in deg/s (0-1)")]
-    public float RotationDamping;
-
     [Tooltip("Percent of speed that will be lost while turning (0-1)")]
     public float RotationSpeedReduction;
 
-    [Header("Roll Animation Settings")]
-    [Tooltip("The rotation speed which will yield the most roll, in deg/s")]
-    public float MaxRollSpeed;
+    [Header("Cannon Settings")]
+    [Tooltip("The maximum horizontal angle that cannonballs can be fired from, measured from the helm/stern, in degrees")]
+    public float MaxFiringAngle;
+    public float CannonballSpeed;
+    public float CannonballGravity;
 
-    [Tooltip("The maximum roll, in deg")]
-    public float MaxRoll;
-
+    [Header("Cannon Physics Settings")]
     public float _CannonPushForce;
     public float _CannonForceDecay;
     public float _MaxCannonTorque;
 
-    private float _angularVelocity;
     private Vector3 _currentCannonTorque;
 
     void Start()
     {
-        _angularVelocity = 0;
     }
 
     void Update()
     {
         HandleRotationInput();
         HandleFireInput();
-
-        // Update rotation
-        float heading = transform.rotation.eulerAngles.y;
-        float nextHeading = heading + _angularVelocity * Time.deltaTime;
-        float nextRoll = ComputeRoll();
-
-        Quaternion nextRotation = Quaternion.AngleAxis(nextHeading, Vector3.up);
-        nextRotation = Quaternion.AngleAxis(nextRoll, nextRotation * Vector3.forward) * nextRotation;
-        //transform.rotation = nextRotation;
-
         UpdateDebugText();
     }
 
     private void HandleRotationInput()
     {
-        // Apply user input
+        // Query user input
         float rotateInput = 0f;
         if (Input.GetKey(KeyCode.A)) rotateInput -= 1f;
         if (Input.GetKey(KeyCode.D)) rotateInput += 1f;
-        _angularVelocity += rotateInput * RotationAcceleration * Time.deltaTime;
 
-        // Apply damping when no user input
-        if (rotateInput == 0)
-        {
-            _angularVelocity *= Mathf.Pow(1 - RotationDamping, Time.deltaTime);
-        }
-
-        // Cap angular velocity
-        if (Mathf.Abs(_angularVelocity) > MaxRotationSpeed)
-        {
-            _angularVelocity = MaxRotationSpeed * Mathf.Sign(_angularVelocity);
-        }
-        if (Mathf.Abs(_angularVelocity) < 0.0001f)
-        {
-            _angularVelocity = 0;
-        }
+        // Apply torque
+        float currentYawSpeed = Mathf.Abs(_Rigidbody.angularVelocity.y);
+        _Rigidbody.AddTorque(transform.up * rotateInput * _TurningTorque * (_TurningSpeed - currentYawSpeed));
 
         // Animate model
         Caravel.TargetRudderTilt = rotateInput * 30;
-
-        // Apply rotation
-        float currentYawSpeed = Mathf.Abs(_Rigidbody.angularVelocity.y);
-        _Rigidbody.AddTorque(transform.up * rotateInput * _TurningTorque * (_TurningSpeed - currentYawSpeed));
     }
 
     private void HandleFireInput()
@@ -145,7 +101,7 @@ public class PlayerControl : ShipControl
                 cannonball.Gravity = CannonballGravity;
                 cannonball.IgnoreCollisions = this.gameObject;
 
-                // Add force from cannonball
+                // Add torque from cannonball
                 Vector3 localCannonForce = transform.rotation * -cannonballVelocity.normalized * _CannonPushForce;
                 localCannonForce.y = Mathf.Abs(localCannonForce.y);
 
@@ -154,7 +110,7 @@ public class PlayerControl : ShipControl
                 Vector3 relativeTorque = Vector3.Cross(localSpawnPos - _Rigidbody.centerOfMass, localCannonForce);
                 relativeTorque.x = relativeTorque.y = 0;
 
-                _currentCannonTorque += transform.rotation * relativeTorque;
+                _currentCannonTorque += Quaternion.Inverse(transform.rotation) * relativeTorque;
             }
         }
     }
@@ -175,7 +131,7 @@ public class PlayerControl : ShipControl
         Vector3 forward = transform.forward;
         forward.y = 0;
         forward.Normalize();
-        result += $"Forward speed: {Vector3.Project(Quaternion.Inverse(transform.rotation) * _Rigidbody.velocity, Vector3.forward).z} / Desired {BaseSpeed}\n";
+        result += $"Forward speed: {Vector3.Project(Quaternion.Inverse(transform.rotation) * _Rigidbody.velocity, Vector3.forward).z} / Desired {Speed}\n";
 
         float yawSpeed = _Rigidbody.angularVelocity.y;
         result += $"Yaw speed: {Mathf.Round(yawSpeed * Mathf.Rad2Deg)} deg/s\n";
@@ -188,7 +144,7 @@ public class PlayerControl : ShipControl
 
     protected override void FixedUpdate()
     {
-        float turnFactor = Mathf.Abs(_angularVelocity) / MaxRotationSpeed; // 0 = not turning at all, 1 = turning at maximum rate
+        float turnFactor = Mathf.Abs(_Rigidbody.angularVelocity.y * Mathf.Rad2Deg) / _TurningSpeed; // 0 = not turning at all, 1 = turning at maximum rate
         Speed = (1.0f - turnFactor * RotationSpeedReduction) * BaseSpeed;
         base.FixedUpdate();
 
@@ -201,28 +157,21 @@ public class PlayerControl : ShipControl
 
         Vector3 velocityXZ = _Rigidbody.velocity;
         velocityXZ.y = 0;
-        //Debug.Log(velocityXZ.magnitude + " / " + Speed);
-
+        
         // Update cannon torque
+        // Ensure cannon torque is capped
         if (_currentCannonTorque.sqrMagnitude > _MaxCannonTorque * _MaxCannonTorque)
         {
             _currentCannonTorque.Normalize();
             _currentCannonTorque *= _MaxCannonTorque;
         }
-
+        // Apply the torque
         _Rigidbody.AddTorque(_currentCannonTorque);
+        // Reduce the torque magnitude over time
         _currentCannonTorque *= (1f - Time.fixedDeltaTime * _CannonForceDecay);
         if (_currentCannonTorque.sqrMagnitude <= 0.05f)
         {
             _currentCannonTorque = Vector3.zero;
         }
-    }
-
-    private float ComputeRoll()
-    {
-        float x = -5 * _angularVelocity / MaxRollSpeed;
-        float ex = Mathf.Pow((float)Math.E, x);
-        float d = ex / (ex + 1);
-        return MaxRoll * (d - 0.5f);
     }
 }
