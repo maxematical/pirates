@@ -50,7 +50,12 @@ public class PlayerControl : ShipControl
     [Tooltip("The maximum roll, in deg")]
     public float MaxRoll;
 
+    public float _CannonPushForce;
+    public float _CannonForceDecay;
+    public float _MaxCannonTorque;
+
     private float _angularVelocity;
+    private Vector3 _currentCannonTorque;
 
     void Start()
     {
@@ -139,6 +144,17 @@ public class PlayerControl : ShipControl
                 cannonball.Velocity = cannonballVelocity;
                 cannonball.Gravity = CannonballGravity;
                 cannonball.IgnoreCollisions = this.gameObject;
+
+                // Add force from cannonball
+                Vector3 localCannonForce = transform.rotation * -cannonballVelocity.normalized * _CannonPushForce;
+                localCannonForce.y = Mathf.Abs(localCannonForce.y);
+
+                Vector3 localSpawnPos = transform.worldToLocalMatrix.MultiplyPoint3x4(spawnPos);
+
+                Vector3 relativeTorque = Vector3.Cross(localSpawnPos - _Rigidbody.centerOfMass, localCannonForce);
+                relativeTorque.x = relativeTorque.y = 0;
+
+                _currentCannonTorque += transform.rotation * relativeTorque;
             }
         }
     }
@@ -148,7 +164,7 @@ public class PlayerControl : ShipControl
         Vector2 mousePos = Input.mousePosition;
 
         RaycastHit hitInfo;
-        bool hit = Physics.Raycast(Camera.main.ScreenPointToRay(mousePos), out hitInfo, 30f, LayerMask.GetMask("Sea"));
+        bool hit = Physics.Raycast(Camera.main.ScreenPointToRay(mousePos), out hitInfo, 100f, LayerMask.GetMask("Sea"));
         return hit ? hitInfo.point : (Vector3?)null;
     }
 
@@ -159,10 +175,13 @@ public class PlayerControl : ShipControl
         Vector3 forward = transform.forward;
         forward.y = 0;
         forward.Normalize();
-        result += $"Forward speed: {Vector3.Project(_Rigidbody.velocity, forward).magnitude} / Desired {BaseSpeed}\n";
+        result += $"Forward speed: {Vector3.Project(Quaternion.Inverse(transform.rotation) * _Rigidbody.velocity, Vector3.forward).z} / Desired {BaseSpeed}\n";
 
         float yawSpeed = _Rigidbody.angularVelocity.y;
-        result += $"Yaw speed: {Mathf.Round(yawSpeed * Mathf.Rad2Deg)} deg/s";
+        result += $"Yaw speed: {Mathf.Round(yawSpeed * Mathf.Rad2Deg)} deg/s\n";
+
+        float cannonTorque = _currentCannonTorque.magnitude;
+        result += $"Cannon torque: {cannonTorque}\n";
 
         _DebugText.text = result;
     }
@@ -176,13 +195,27 @@ public class PlayerControl : ShipControl
         Vector3 forward = transform.forward;
         forward.y = 0;
         forward.Normalize();
-        float currentSpeed = Vector3.Project(_Rigidbody.velocity, forward).magnitude;
-        Vector3 windForce = transform.forward * (Speed - currentSpeed) * _WindMultiplier;
+        float currentSpeed = Vector3.Project(Quaternion.Inverse(transform.rotation) * _Rigidbody.velocity, Vector3.forward).z;
+        Vector3 windForce = transform.forward * Util.Cap(Speed - currentSpeed, 0.15f) * _WindMultiplier;
         _Rigidbody.AddForceAtPosition(windForce, _WindForceCenter.transform.position);
 
         Vector3 velocityXZ = _Rigidbody.velocity;
         velocityXZ.y = 0;
         //Debug.Log(velocityXZ.magnitude + " / " + Speed);
+
+        // Update cannon torque
+        if (_currentCannonTorque.sqrMagnitude > _MaxCannonTorque * _MaxCannonTorque)
+        {
+            _currentCannonTorque.Normalize();
+            _currentCannonTorque *= _MaxCannonTorque;
+        }
+
+        _Rigidbody.AddTorque(_currentCannonTorque);
+        _currentCannonTorque *= (1f - Time.fixedDeltaTime * _CannonForceDecay);
+        if (_currentCannonTorque.sqrMagnitude <= 0.05f)
+        {
+            _currentCannonTorque = Vector3.zero;
+        }
     }
 
     private float ComputeRoll()

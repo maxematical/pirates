@@ -467,11 +467,11 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 419193085}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.488, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -2.9103827e-11, y: 0, z: -1.1368684e-13, w: 1}
+  m_LocalPosition: {x: -0, y: 0.027866606, z: 0.0000000104680655}
+  m_LocalScale: {x: 0.99999994, y: 0.99999994, z: 1.0000001}
   m_Children: []
-  m_Father: {fileID: 765587204}
+  m_Father: {fileID: 1738920858}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &485863260
@@ -2957,10 +2957,8 @@ Transform:
   m_Children:
   - {fileID: 608032981}
   - {fileID: 1109678049}
-  - {fileID: 419193086}
-  - {fileID: 897651564}
-  - {fileID: 1991377357}
   - {fileID: 806464977}
+  - {fileID: 1991377357}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2976,7 +2974,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 582cd1becdda81041b4053e7f0b3fa05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BaseSpeed: 2.25
+  BaseSpeed: 0
   CannonballPrefab: {fileID: 2108215847276787037, guid: 6d84d27bb4a9944418c2657b1007627d,
     type: 3}
   CannonballSpawnL: {fileID: 419193085}
@@ -2985,7 +2983,7 @@ MonoBehaviour:
   _Rigidbody: {fileID: 765587203}
   _DebugText: {fileID: 1315535439}
   _WindForceCenter: {fileID: 608032980}
-  _WindMultiplier: 78
+  _WindMultiplier: 80
   _TurningSpeed: 20
   _TurningTorque: 0.1
   MaxFiringAngle: 30
@@ -2997,6 +2995,9 @@ MonoBehaviour:
   RotationSpeedReduction: 0
   MaxRollSpeed: 90
   MaxRoll: 10
+  _CannonPushForce: 1.5
+  _CannonForceDecay: 3
+  _MaxCannonTorque: 3
 --- !u!114 &765587206
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3087,7 +3088,7 @@ Transform:
   - {fileID: 544266119}
   - {fileID: 485863261}
   m_Father: {fileID: 765587204}
-  m_RootOrder: 5
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &892890628
 GameObject:
@@ -3266,12 +3267,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 897651563}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.488, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: 2.9103827e-11, y: 1.1641534e-10, z: -5.684343e-13, w: 1}
+  m_LocalPosition: {x: -0.000000009536743, y: 0.027866593, z: 0.000000026337801}
+  m_LocalScale: {x: 0.99999994, y: 0.99999994, z: 1.0000001}
   m_Children: []
-  m_Father: {fileID: 765587204}
-  m_RootOrder: 3
+  m_Father: {fileID: 1275323931}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &924771294
 GameObject:
@@ -3707,7 +3708,7 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 30, y: 1, z: 30}
+  m_Size: {x: 300, y: 1, z: 300}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1109678048
 GameObject:
@@ -3934,6 +3935,12 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!4 &1275323931 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3814550372216049297, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1315535437
 GameObject:
   m_ObjectHideFlags: 0
@@ -4203,6 +4210,12 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 14
   m_Mesh: {fileID: 1017354633590729971, guid: f1e645c94fe42534bab22bc03b1f9bb5, type: 3}
+--- !u!4 &1738920858 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2746204541335648932, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 2013807524}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1739028058
 GameObject:
   m_ObjectHideFlags: 0
@@ -4571,7 +4584,7 @@ PrefabInstance:
     - target: {fileID: -4216859302048453862, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}
       propertyPath: m_RootOrder
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}
