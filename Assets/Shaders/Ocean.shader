@@ -54,7 +54,6 @@ Shader "Custom/Ocean"
 			float3 worldPos;
 			float3 originalPos;
 			half3 worldRefl;
-			float crest;
 			INTERNAL_DATA
 		};
 
@@ -100,7 +99,6 @@ Shader "Custom/Ocean"
 		int _WavesLength = 0;
 		float4 _WavesData[WAVES_CAPACITY]; // steepness, amplitude, frequency, speed
 		float4 _WavesDirection[WAVES_CAPACITY]; // directionXYZ, phase constant
-		float4 _OceanPosition; // XYZ position of the ocean GameObject
 
 		sampler2D _NormalMap;
 		sampler2D _NoiseMap;
@@ -133,27 +131,17 @@ Shader "Custom/Ocean"
 
 		void vert(inout appdata_full v, out Input toSurf)
 		{
-			//v2f o;
-			//o.pos = UnityObjectToClipPos(vertex);
-			//float3 worldPos = mul(unity_ObjectToWorld, vertex).xyz;
-			//float3 worldNormal = UnityObjectToWorldNormal(normal);
+			// Calculate reflection (this can be used for skybox reflections in the surface shader)
 			float3 worldViewDir = normalize(UnityWorldSpaceViewDir(v.vertex));
-			//
-			//o.normal = worldNormal;
-			////o.fresnel = dot(normalize(ObjSpaceViewDir(vertex)), normal);
-			//o.fresnel = dot(normalize(ObjSpaceViewDir(vertex)), normal);
-			//o.worldPos = vertex;
 			half3 worldRefl = reflect(-worldViewDir, v.normal);
-			//return o;
 
-			float3 xz = v.vertex.xyz;
+			// Compute Gerstner Waves position
+			float4 pos = mul(unity_ObjectToWorld, v.vertex);
+			pos.y = 0;
+
+			float3 xz = pos.xyz;
 			xz.y = 0;
 
-			float crest = 0;
-
-			float4 pos = v.vertex;
-			pos.y = 0;
-			float3 normal = float3(0, 1, 0);
 			for (int i = 0; i < _WavesLength; i++)
 			{
 				float4 data = _WavesData[i];
@@ -168,12 +156,10 @@ Shader "Custom/Ocean"
 				pos.x += steepness * amplitude * direction.x * cos(dot(frequency * direction, xz) + phaseConstant * time);
 				pos.z += steepness * amplitude * direction.z * cos(dot(frequency * direction, xz) + phaseConstant * time);
 				pos.y += amplitude * sin(dot(frequency * direction, xz) + phaseConstant * time);
-
-				crest += (i == 0) * (abs(pos.x - v.vertex.x) + abs(pos.z - v.vertex.z)) * (pos.y - v.vertex.y) / amplitude;
-				//crest += (i == 0) * sin(dot(frequency * direction, xz) + phaseConstant * time);
-				//crest -= (i == 1) * 0.5 * sin(dot(frequency * direction, xz) + phaseConstant * time);
 			}
 
+			// Compute Gerstner Waves normal
+			float3 normal = float3(0, 1, 0);
 			for (i = 0; i < _WavesLength; i++)
 			{
 				float4 data = _WavesData[i];
@@ -192,31 +178,16 @@ Shader "Custom/Ocean"
 				normal.x -= direction.x * wa * c;
 				normal.z -= direction.z * wa * c;
 				normal.y -= steepness * wa * s;
-
-				if (i == 0) crest = 1 - normal.y;
-			}
-			float normalY = normalize(normal).y;
-			crest = saturate(pow(10 * (1 - normalY), 1)) * 2;
-
-			float4 normalUv = 0.05 * float4(xz.x, 0, xz.z, 0);
-			float3 normalMap = tex2Dlod(_NormalMap, normalUv);
-			//pos.y += normalMap.x;
-
-			// TODO find some way to do this without the if statement
-			// maybe lerp(pos, v.vertex, saturate(_WaveLength)) ?
-			if (_WavesLength == 0)
-			{
-				pos = v.vertex;
-				normal = v.normal;
 			}
 
-			v.vertex = pos;
+			// Apply vertex offset and normal
+			v.vertex = mul(unity_WorldToObject, pos);
 			v.normal = normal;
 
+			// Send additional data to surface shader
 			UNITY_INITIALIZE_OUTPUT(Input, toSurf);
 			toSurf.originalPos = xz;
 			toSurf.worldRefl = worldRefl;
-			toSurf.crest = saturate(crest);
 		}
 
 		inline fixed3 colorBlend(fixed3 a, fixed3 b)
@@ -227,6 +198,7 @@ Shader "Custom/Ocean"
 
 		float greaterThan(float n, float atLeast, float m = 9999)
 		{
+			return n;
 			/*if (atLeast == -1) return n;
 			return n >= atLeast ? 1 : 0;*/
 			return saturate(m * (n - atLeast));
@@ -234,7 +206,7 @@ Shader "Custom/Ocean"
 
 		void surf(Input i, inout SurfaceOutputCustom o)
 		{
-			float3 objectPos = i.worldPos - _OceanPosition;
+			float3 objectPos = mul(unity_WorldToObject, i.worldPos);
 
 			float2 normalUv = 0.02 * (i.originalPos.xz + i.worldPos.xz) * 0.5;
 			normalUv = normalUv.yx;

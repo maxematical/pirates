@@ -150,8 +150,6 @@ public class Ocean : MonoBehaviour
         material.SetVectorArray("_WavesData", waveData);
         material.SetVectorArray("_WavesDirection", waveDirections);
 
-        material.SetVector("_OceanPosition", new Vector4(transform.position.x, transform.position.y, transform.position.z));
-
         _lastSendTime = Time.time;
     }
 
