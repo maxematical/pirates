@@ -2985,8 +2985,9 @@ MonoBehaviour:
   _Rigidbody: {fileID: 765587203}
   _DebugText: {fileID: 1315535439}
   _WindForceCenter: {fileID: 608032980}
-  _WindMultiplier: 2.5
-  _TurningTorque: 1.25
+  _WindMultiplier: 78
+  _TurningSpeed: 20
+  _TurningTorque: 0.1
   MaxFiringAngle: 30
   CannonballSpeed: 15
   CannonballGravity: 3

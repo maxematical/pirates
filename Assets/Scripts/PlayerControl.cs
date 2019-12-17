@@ -20,6 +20,8 @@ public class PlayerControl : ShipControl
     public GameObject _WindForceCenter;
     public float _WindMultiplier;
 
+    [Tooltip("The turning speed, in deg/s")]
+    public float _TurningSpeed;
     public float _TurningTorque;
 
     [Tooltip("The maximum horizontal angle that cannonballs can be fired from, measured from the helm/stern, in degrees")]
@@ -100,7 +102,8 @@ public class PlayerControl : ShipControl
         Caravel.TargetRudderTilt = rotateInput * 30;
 
         // Apply rotation
-        _Rigidbody.AddTorque(transform.up * rotateInput * _TurningTorque);
+        float currentYawSpeed = Mathf.Abs(_Rigidbody.angularVelocity.y);
+        _Rigidbody.AddTorque(transform.up * rotateInput * _TurningTorque * (_TurningSpeed - currentYawSpeed));
     }
 
     private void HandleFireInput()
@@ -158,6 +161,9 @@ public class PlayerControl : ShipControl
         forward.Normalize();
         result += $"Forward speed: {Vector3.Project(_Rigidbody.velocity, forward).magnitude} / Desired {BaseSpeed}\n";
 
+        float yawSpeed = _Rigidbody.angularVelocity.y;
+        result += $"Yaw speed: {Mathf.Round(yawSpeed * Mathf.Rad2Deg)} deg/s";
+
         _DebugText.text = result;
     }
 
@@ -167,7 +173,11 @@ public class PlayerControl : ShipControl
         Speed = (1.0f - turnFactor * RotationSpeedReduction) * BaseSpeed;
         base.FixedUpdate();
 
-        Vector3 windForce = transform.forward * Speed * _WindMultiplier;
+        Vector3 forward = transform.forward;
+        forward.y = 0;
+        forward.Normalize();
+        float currentSpeed = Vector3.Project(_Rigidbody.velocity, forward).magnitude;
+        Vector3 windForce = transform.forward * (Speed - currentSpeed) * _WindMultiplier;
         _Rigidbody.AddForceAtPosition(windForce, _WindForceCenter.transform.position);
 
         Vector3 velocityXZ = _Rigidbody.velocity;
