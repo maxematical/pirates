@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerControl : ShipControl
 {
@@ -14,11 +15,12 @@ public class PlayerControl : ShipControl
     public CaravelModelController Caravel;
     public Rigidbody _Rigidbody;
 
+    public Text _DebugText;
+
     public GameObject _WindForceCenter;
     public float _WindMultiplier;
 
-    public GameObject _TurningForceCenter;
-    public float _TurningForceMultiplier;
+    public float _TurningTorque;
 
     [Tooltip("The maximum horizontal angle that cannonballs can be fired from, measured from the helm/stern, in degrees")]
     public float MaxFiringAngle;
@@ -66,6 +68,8 @@ public class PlayerControl : ShipControl
         Quaternion nextRotation = Quaternion.AngleAxis(nextHeading, Vector3.up);
         nextRotation = Quaternion.AngleAxis(nextRoll, nextRotation * Vector3.forward) * nextRotation;
         //transform.rotation = nextRotation;
+
+        UpdateDebugText();
     }
 
     private void HandleRotationInput()
@@ -95,9 +99,8 @@ public class PlayerControl : ShipControl
         // Animate model
         Caravel.TargetRudderTilt = rotateInput * 30;
 
-        // Apply rotation force
-        Vector3 rotationForce = -transform.right * rotateInput * _TurningForceMultiplier;
-        _Rigidbody.AddForceAtPosition(rotationForce, _TurningForceCenter.transform.position);
+        // Apply rotation
+        _Rigidbody.AddTorque(transform.up * rotateInput * _TurningTorque);
     }
 
     private void HandleFireInput()
@@ -144,6 +147,18 @@ public class PlayerControl : ShipControl
         RaycastHit hitInfo;
         bool hit = Physics.Raycast(Camera.main.ScreenPointToRay(mousePos), out hitInfo, 30f, LayerMask.GetMask("Sea"));
         return hit ? hitInfo.point : (Vector3?)null;
+    }
+
+    private void UpdateDebugText()
+    {
+        string result = "";
+
+        Vector3 forward = transform.forward;
+        forward.y = 0;
+        forward.Normalize();
+        result += $"Forward speed: {Vector3.Project(_Rigidbody.velocity, forward).magnitude} / Desired {BaseSpeed}\n";
+
+        _DebugText.text = result;
     }
 
     protected override void FixedUpdate()
