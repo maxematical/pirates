@@ -222,7 +222,7 @@ MonoBehaviour:
     IsRightSide: 1
   FireVFXPrefab: {fileID: 7931700058953922575, guid: 1ac582662eff6ff4fa6090eed3fdfbf2,
     type: 3}
-  FireVFXScale: 0.1
+  FireVFXScale: 0.25
 --- !u!64 &509609045
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -248,7 +248,7 @@ MeshCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 14
   m_Mesh: {fileID: -3382551629729668921, guid: f1e645c94fe42534bab22bc03b1f9bb5, type: 3}
 --- !u!1001 &6951586679541683626
@@ -269,6 +269,11 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1173702418961526531, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4565211952562884219, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -331,22 +336,27 @@ PrefabInstance:
     - target: {fileID: -4216859302048453862, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.35
+      value: 1.2
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.35
+      value: 1.2
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.35
+      value: 1.2
       objectReference: {fileID: 0}
     - target: {fileID: -7956839076154134942, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}
       propertyPath: m_LocalScale.y
       value: 0.7174593
+      objectReference: {fileID: 0}
+    - target: {fileID: -6890616303806842731, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8950703377410299952, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}
@@ -377,16 +387,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_RootOrder
       value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 4565211952562884219, guid: f1e645c94fe42534bab22bc03b1f9bb5,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -6890616303806842731, guid: f1e645c94fe42534bab22bc03b1f9bb5,
-        type: 3}
-      propertyPath: m_Enabled
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: -3330902553719985500, guid: f1e645c94fe42534bab22bc03b1f9bb5, type: 3}
