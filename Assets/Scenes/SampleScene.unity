@@ -3375,40 +3375,47 @@ MonoBehaviour:
   WorldSize: 175
   VerticesPerUnit: 1
   Waves:
-  - Steepness: 3
+  - Comment: Main Wave
+    Steepness: 2
     Amplitude: 0.4
-    Wavelength: 2.5
-    DirectionXZ: {x: 0.5, y: 0.5}
-    Speed: 1
-  - Steepness: 0.4
+    Wavelength: 3.9
+    DirectionXZ: {x: 0.5, y: 1}
+    Speed: 3.4
+  - Comment: Secondary Wave
+    Steepness: 0
     Amplitude: 0.3
-    Wavelength: 4
-    DirectionXZ: {x: 0.2, y: 1}
-    Speed: 0.5
-  - Steepness: 0.1
-    Amplitude: 0.05
-    Wavelength: 0.5
-    DirectionXZ: {x: 1, y: 0.7}
-    Speed: 0.5
-  - Steepness: 0.25
+    Wavelength: 2.5
+    DirectionXZ: {x: -1.25, y: 1}
+    Speed: 4
+  - Comment: Small Vertical Wave
+    Steepness: 3
+    Amplitude: 0.15
+    Wavelength: 2
+    DirectionXZ: {x: 0.1, y: 1}
+    Speed: 1.8
+  - Comment: Penguins
+    Steepness: 1
+    Amplitude: 0.15
+    Wavelength: 2
+    DirectionXZ: {x: -0.65, y: 1}
+    Speed: 4
+  - Comment: Vertical Wave
+    Steepness: 0.1
     Amplitude: 0.1
-    Wavelength: 1.75
-    DirectionXZ: {x: 0.3, y: 0.7}
-    Speed: 0.375
-  - Steepness: 0.08
-    Amplitude: 0.06
-    Wavelength: 0.65
-    DirectionXZ: {x: 0.9, y: 1.2}
+    Wavelength: 2.2
+    DirectionXZ: {x: 0.1, y: 1}
     Speed: 2.5
-  - Steepness: 0.08
-    Amplitude: 0.06
-    Wavelength: 0.65
-    DirectionXZ: {x: 1.2, y: 0.9}
+  - Comment: Unused Wave
+    Steepness: 0
+    Amplitude: 0
+    Wavelength: 2.3
+    DirectionXZ: {x: 0.5, y: -1}
     Speed: 3
-  - Steepness: 0.05
-    Amplitude: 0.1
-    Wavelength: 1
-    DirectionXZ: {x: 0.1, y: 0.9}
+  - Comment: Unused Wave
+    Steepness: 0.2
+    Amplitude: 0
+    Wavelength: 2.67
+    DirectionXZ: {x: 0, y: 1}
     Speed: 0.55
   ResendShaderValues: 1
 --- !u!23 &1059587823
@@ -6513,7 +6520,6 @@ MonoBehaviour:
     PursuitStartDistance: 26
     PursuitStopDistance: 20
     PursuitSpeedMultiplier: 1.2
-    MaxBroadsideAngle: 0
     CircleDistanceMultiplier: 3
     MaxRotationSpeed: 20
     SlowRadius: 30

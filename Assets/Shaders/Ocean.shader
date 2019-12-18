@@ -25,7 +25,10 @@ Shader "Custom/Ocean"
 		_LambertFactor("Lambert Factor", float) = 0.45
 		_SpecularPower("Specular Power", float) = 192
 		_SpecularFactor("Specular Factor", float) = 0.4
+
+		_EmissionStart("Emission Start", float) = 0
 		_EmissionFactor("Emission Factor", float) = 0
+		_EmissionColor("Emission Color", Color) = (0.0, 0.0, 0.0, 1.0)
 	}
 	SubShader
 	{
@@ -106,15 +109,17 @@ Shader "Custom/Ocean"
 		sampler2D _SeaDistortion;
 
 		// Misc settings
-		float _SubsurfDelta; // =1
-		float _SubsurfFactor; // =0.75
+		float _SubsurfDelta;
+		float _SubsurfFactor;
 
-		float _LambertFactor = 0.45;
+		float _LambertFactor;
 
-		float _SpecularPower; // 192
-		float _SpecularFactor; // 0.4
+		float _SpecularPower;
+		float _SpecularFactor;
 
+		float _EmissionStart;
 		float _EmissionFactor;
+		float4 _EmissionColor;
 
 		//Add instancing support for this shader. You need to check Enable Instancing on materials that use the shader.
 		// See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
@@ -208,31 +213,32 @@ Shader "Custom/Ocean"
 		{
 			float3 objectPos = mul(unity_WorldToObject, i.worldPos);
 
-			float2 normalUv = 0.02 * (i.originalPos.xz + i.worldPos.xz) * 0.5;
+			/*float2 normalUv = 0.02 * (i.originalPos.xz + i.worldPos.xz) * 0.5;
 			normalUv = normalUv.yx;
 			
 			float3 normalMap = tex2D(_NoiseMap, normalUv) - float3(0.5, 0, 0.5);
 			normalMap.y = 0;
 			normalMap = normalize(normalMap);
-			//o.Normal += normalMap * 0.25;
+			o.Normal += normalMap * 0.25;*/
 
 			/*half4 skyData = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, i.worldRefl);
 			half3 skyColor = DecodeHDR(skyData, unity_SpecCube0_HDR);*/
 
 			float3 base = lerp(_BaseColor, _EdgeColor, saturate(_EdgeStart + _EdgeIncrease * objectPos.y));
 
-			float3 seaUvOffset = tex2D(_SeaDistortion, i.originalPos.xz * 0.01 + i.worldPos.xz * 0.01 + _Time[1] * 0.4 * float2(0.01, 0.02));
+			float3 seaUvOffset = tex2D(_SeaDistortion, i.originalPos.xz * 0.005 + i.worldPos.xz * 0.005 + _Time[1] * 1.0 * float2(0.01, 0.02));
 			
-			float2 voronoiUv1 = (i.originalPos.xz * 0.025 * 0.25 + i.worldPos.xz * 0.025 * 0.75);
-			float2 voronoiUv2 = (i.originalPos.xz * 0.004 + i.worldPos.xz * 0.028) + float2(0.5, 0.4) + seaUvOffset.rb * 0.075;
+			float2 voronoiUv1 = 0.4 * (i.originalPos.xz * 0.025 * 0.25 + i.worldPos.xz * 0.025 * 0.75);
+			float2 voronoiUv2 = 0.4 * (i.originalPos.xz * 0.004 + i.worldPos.xz * 0.028) + float2(0.5, 0.4) + seaUvOffset.rb * 0.05;
 			float3 voronoi1 = (greaterThan(tex2D(_Voronoi, voronoiUv1), 0.45)) * 0.4 * 2.6;
-			float3 voronoi2 = (greaterThan(tex2D(_Voronoi, voronoiUv2), 0.4)) * 0.4 * 2 * 0.2;
+			float3 voronoi2 = (greaterThan(tex2D(_Voronoi, voronoiUv2), 0.4)) * 0.4 * 2.6;
 
-			float foamAmount = max(0, 0.2 * objectPos.y + 1);
+			float foamAmount = max(0, 0.3 * objectPos.y + 0.4);
 			//float foamAmount = 1;
 			float texturedFoamAmount = greaterThan(foamAmount * voronoi1 + foamAmount * voronoi2, 1.05) * 0.8;
 			o.Albedo = lerp(base, 1.0, texturedFoamAmount);
-			//o.Albedo = voronoi1;
+			//o.Albedo = seaUvOffset;
+			//o.Albedo = lerp(base, 1.0, voronoi2);
 			//o.Albedo = voronoi2;
 			//o.Albedo = foamAmount;
 			o.foam = texturedFoamAmount;
@@ -276,15 +282,22 @@ Shader "Custom/Ocean"
 			half VdotL = dot(viewDir, -(lightDir + normal * _SubsurfDelta));
 			half IBack = pow(saturate(VdotL), 2) * _SubsurfFactor;
 
-			// combine lighting and return result
-			half4 c;
-			c.rgb = s.Albedo * _LightColor0.rgb * NdotL * atten +
+			// emission
+			half emission = max(0, _EmissionStart + _EmissionFactor * (1 - s.Normal.y));
+
+			// combine lighting
+			half4 waterLight;
+			waterLight.rgb = s.Albedo * _LightColor0.rgb * NdotL * atten +
 				_LightColor0.rgb * specularIntensity * atten +
 				s.Albedo * _LightColor0.rgb * atten * IBack +
-				s.Albedo * _LightColor0.rgb * _EmissionFactor;
-			c.a = s.Alpha;
+				_EmissionColor * _LightColor0.rgb * emission;
+			waterLight.a = s.Alpha;
 
-			return lerp(c, foamLighting(s, lightDir, viewDir, atten), s.foam);
+			// mix with foam lighting
+			half4 foamLight = foamLighting(s, lightDir, viewDir, atten) +
+				half4(s.Albedo * _LightColor0.rgb * emission, 0.0);
+
+			return lerp(waterLight, foamLight, s.foam);
 			//return c;
 		}
 

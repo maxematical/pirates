@@ -160,6 +160,12 @@ public class Ocean : MonoBehaviour
     [Serializable]
     public struct WaveSettings
     {
+        [Tooltip("This can be used to add a comment to this wave. Its value does not affect anything else.")]
+        [SerializeField]
+#pragma warning disable IDE0051 // Remove unused private members
+        private string Comment;
+#pragma warning restore IDE0051
+
         public float Steepness; // Q
         public float Amplitude; // A
         public float Wavelength; // L

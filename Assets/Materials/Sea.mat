@@ -93,12 +93,12 @@ Material:
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _SmoothnessTextureChannel: 0
-    - _SpecularFactor: 0.4
+    - _SpecularFactor: 0.2
     - _SpecularHighlights: 1
-    - _SpecularPower: 192
+    - _SpecularPower: 512
     - _SrcBlend: 1
-    - _SubsurfDelta: 0.5
-    - _SubsurfFactor: 1
+    - _SubsurfDelta: 0.2
+    - _SubsurfFactor: 1.1
     - _UVSec: 0
     - _WaveSteepness: 0
     - _WavesCapacity: 4
