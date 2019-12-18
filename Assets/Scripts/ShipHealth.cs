@@ -8,7 +8,7 @@ public class ShipHealth : MonoBehaviour
     public int Health { get; set; }
 
     // TODO add better way of getting velocity
-    public Vector3 Velocity { get => GetComponent<ShipControl>().Velocity; }
+    public Vector3 Velocity { get => GetComponent<ShipControl>().Rigidbody.velocity; }
 
     void Start()
     {

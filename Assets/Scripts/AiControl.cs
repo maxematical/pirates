@@ -5,23 +5,30 @@ using UnityEngine;
 
 public class AiControl : ShipControl
 {
-    public GameObject Player;
-    public AiSettings Settings;
+    public GameObject _Player;
+    public GameObject _CannonballPrefab;
 
-    public GameObject CannonballPrefab;
-    public CaravelModelController Caravel;
+    [Header("Components and Children")]
+    public CaravelModelController _Caravel;
+    public Rigidbody _Rigidbody;
+    public GameObject _WindForceCenter;
+
+    [Header("Settings")]
+    public AiSettings _AiSettings;
+    public ShipPhysicsSettings _PhysicsSettings;
 
     private AiHelper _helper;
     private AiState _state;
-    private float _angularVelocity;
-
     private float _lastFireTime;
+
+    public override Rigidbody Rigidbody => _Rigidbody;
+    protected override Vector3 WindForcePosition => _WindForceCenter.transform.position;
+    protected override ShipPhysicsSettings PhysicsSettings => _PhysicsSettings;
 
     void Start()
     {
-        _helper = new AiHelper(this.gameObject, Player, Settings);
+        _helper = new AiHelper(this.gameObject, _Player, _AiSettings);
         _state = new PursueState(this, _helper);
-        _angularVelocity = 0;
 
         _lastFireTime = float.MinValue;
     }
@@ -32,45 +39,33 @@ public class AiControl : ShipControl
         AiState nextState = _state.Update();
 
         // Turn towards the desired heading
-        // This uses an angular acceleration approach, which makes the turns more smooth and realistic looking.
-        // The code is roughly based off of page 25 of the following PDF:
-        // http://web.archive.org/web/20191120175833/https://imada.sdu.dk/~marco/Teaching/AY2012-2013/DM810/Slides/dm810-lec2.pdf
+        float targetTurningSpeed;
+
         float distanceToTargetHeading = Util.AngleDist(_helper.Heading, _state.DesiredHeading);
-        
-        // Compute target angular velocity
-        float targetAngularVelocity;
-        if (distanceToTargetHeading > Settings.SlowRadius)
+        if (distanceToTargetHeading > _AiSettings.SlowRadius)
         {
-            targetAngularVelocity = Settings.MaxRotationSpeed;
+            targetTurningSpeed = _AiSettings.MaxRotationSpeed;
         }
         else
         {
-            targetAngularVelocity = Settings.MaxRotationSpeed * distanceToTargetHeading / Settings.SlowRadius * 0.8f;
+            targetTurningSpeed = _AiSettings.MaxRotationSpeed * distanceToTargetHeading / _AiSettings.SlowRadius * 0.8f;
         }
-        targetAngularVelocity *= Util.GetTurnDirection(_helper.Heading, _state.DesiredHeading);
+        targetTurningSpeed *= Util.GetTurnDirection(_helper.Heading, _state.DesiredHeading);
 
-        // Compute angular acceleration
-        float angularAcceleration = Util.Cap((targetAngularVelocity - _angularVelocity) / Settings.TimeToTarget, Settings.MaxAngularAcceleration);
-        
-        // Update angular velocity by applying the acceleration
-        _angularVelocity = Util.Cap(_angularVelocity + angularAcceleration * Time.deltaTime, Settings.MaxRotationSpeed);
-
-        // Update heading by applying angular velocity
-        float nextHeading = _helper.Heading + _angularVelocity * Time.deltaTime;
-        transform.rotation = Quaternion.Euler(0, nextHeading, 0);
+        RequestedTurningSpeed = targetTurningSpeed;
 
         // Update speed to desired amount
-        Speed = _state.DesiredSpeed;
+        RequestedSpeed = _state.DesiredSpeed;
 
         // Change state to next
         _state = nextState;
 
         // Animate model
-        Caravel.TargetRudderTilt = 0;
-        Caravel.TargetAimPos = _helper.TargetPos;
-        Caravel.CannonballSpeed = Settings.CannonballSpeed;
-        Caravel.CannonballGravity = Settings.CannonballGravity;
-        Caravel.CannonMaxFiringAngle = Settings.CannonAngle;
+        _Caravel.TargetRudderTilt = 0;
+        _Caravel.TargetAimPos = _helper.TargetPos;
+        _Caravel.CannonballSpeed = _AiSettings.CannonballSpeed;
+        _Caravel.CannonballGravity = _AiSettings.CannonballGravity;
+        _Caravel.CannonMaxFiringAngle = _AiSettings.MaxFiringAngle;
     }
 
     private void OnDrawGizmos()
@@ -164,7 +159,7 @@ public class AiControl : ShipControl
             // Therefore, we want to constrict the angle the farther away the AI is from the player.
             // (For example, if the player is 9 units away, then we only want to turn 60 degrees away so we will still
             // be close to the player)
-            float dist = Mathf.Sqrt(_h.SqrDistanceTo(_h.TargetPos));
+            float dist = Mathf.Sqrt(_h.SqrDistanceTo(_h.TargetPos)) / _h.Settings.CircleDistanceMultiplier;
             float broadsideAngle = Mathf.Max(10, 90 + 10 * Mathf.Min(0, 5 - dist));
             float speedMultiplier = 1 + Mathf.Clamp(0.05f * (65 - broadsideAngle), 0, 0.4f); // move faster when angle is constricted
 
@@ -181,12 +176,6 @@ public class AiControl : ShipControl
             float turnDistance1 = Util.AngleDist(_h.Heading, broadsideHeading1);
             float turnDistance2 = Util.AngleDist(_h.Heading, broadsideHeading2);
             float chosenBroadsideHeading = turnDistance1 < turnDistance2 ? broadsideHeading1 : broadsideHeading2;
-
-            // Don't actually turn if the difference is small enough
-            if (Mathf.Abs(Util.Clamp180(_h.Heading - chosenBroadsideHeading)) < _h.Settings.MaxBroadsideAngle)
-            {
-                //chosenBroadsideHeading = _h.Heading;
-            }
 
             DesiredHeading = chosenBroadsideHeading;
             DesiredSpeed = _h.Settings.BaseSpeed * speedMultiplier;
@@ -228,7 +217,7 @@ public class AiControl : ShipControl
             // * 180: Back
             // * 0 to 180: Right
             // * -180 to 0: Left
-            if (Mathf.Abs(relativeAngle) < _h.Settings.CannonAngle || Mathf.Abs(relativeAngle) > 180 - _h.Settings.CannonAngle)
+            if (Mathf.Abs(relativeAngle) < _h.Settings.MaxFiringAngle || Mathf.Abs(relativeAngle) > 180 - _h.Settings.MaxFiringAngle)
             {
                 return;
             }
@@ -238,12 +227,12 @@ public class AiControl : ShipControl
             if (sqrDistance <= _h.Settings.CannonRange * _h.Settings.CannonRange)
             {
                 int cannonIndex = relativeAngle <= 0 ?
-                    _ai.Caravel.GetNextLeftCannonIndex() :
-                    _ai.Caravel.GetNextRightCannonIndex();
-                var cannon = _ai.Caravel.GetCannon(cannonIndex);
+                    _ai._Caravel.GetNextLeftCannonIndex() :
+                    _ai._Caravel.GetNextRightCannonIndex();
+                var cannon = _ai._Caravel.GetCannon(cannonIndex);
 
-                if (Time.time - cannon.LastFireTime < _ai.Settings.ReloadTime ||
-                    Time.time - _ai._lastFireTime < _ai.Settings.FireInterval)
+                if (Time.time - cannon.LastFireTime < _ai._AiSettings.ReloadTime ||
+                    Time.time - _ai._lastFireTime < _ai._AiSettings.FireInterval)
                 {
                     return;
                 }
@@ -270,13 +259,13 @@ public class AiControl : ShipControl
                 }
 
                 // TODO AI cannonballs inherit AI ship velocity, and update prediction to take this into account
-                GameObject instantiated = Instantiate(_ai.CannonballPrefab, spawnPos, Quaternion.identity);
+                GameObject instantiated = Instantiate(_ai._CannonballPrefab, spawnPos, Quaternion.identity);
                 Cannonball cannonball = instantiated.GetComponent<Cannonball>();
                 cannonball.Gravity = _h.Settings.CannonballGravity;
                 cannonball.Velocity = CalculateCannonballTrajectory(spawnPos, predictedTargetPos, _h.Settings.CannonballSpeed, _h.Settings.CannonballGravity);
                 cannonball.IgnoreCollisions = _h.Self;
 
-                _ai.Caravel.PlayCannonEffects(cannonIndex);
+                _ai._Caravel.PlayCannonEffects(cannonIndex);
             }
         }
     }
@@ -290,7 +279,7 @@ public class AiControl : ShipControl
         public Vector3 SelfPos { get => Self.transform.position; }
         public Vector3 TargetPos { get => Target.transform.position; }
         public float Heading { get => Self.transform.rotation.eulerAngles.y; }
-        public Vector3 TargetVelocity { get => _targetShip?.Velocity ?? Vector3.zero; }
+        public Vector3 TargetVelocity { get => _targetShip?.Rigidbody.velocity?? Vector3.zero; }
 
         private ShipControl _targetShip;
 
@@ -319,8 +308,8 @@ public class AiControl : ShipControl
         public float PursuitSpeedMultiplier;
 
         [Header("Circle State Settings")]
-        [Tooltip("Unused (AT TIME OF WRITING)")]
-        public float MaxBroadsideAngle;
+        [Tooltip("Multiplier for the distance the AI will try to 'maintain' between the player")]
+        public float CircleDistanceMultiplier;
 
         [Header("Navigation Settings")]
         [Tooltip("The maximum angular speed that can be reached")]
@@ -334,7 +323,7 @@ public class AiControl : ShipControl
 
         [Header("Cannon Settings")]
         public float CannonRange;
-        public float CannonAngle;
+        public float MaxFiringAngle;
         [Tooltip("The reload time in seconds for one individual cannon.")]
         public float ReloadTime;
         [Tooltip("The AI will wait at least this long in between firing another cannon shot.")]

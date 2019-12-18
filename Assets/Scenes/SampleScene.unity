@@ -418,7 +418,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 765587204}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &705507993
 GameObject:
@@ -2785,8 +2785,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 608032981}
   - {fileID: 1109678049}
+  - {fileID: 608032981}
   - {fileID: 1328958344}
   m_Father: {fileID: 0}
   m_RootOrder: 3
@@ -2803,26 +2803,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 582cd1becdda81041b4053e7f0b3fa05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BaseSpeed: 2.15
+  _DebugText: {fileID: 1315535439}
   CannonballPrefab: {fileID: 2108215847276787037, guid: 6d84d27bb4a9944418c2657b1007627d,
     type: 3}
-  CannonballSpawnL: {fileID: 0}
-  CannonballSpawnR: {fileID: 0}
-  Caravel: {fileID: 1328958343}
+  _Caravel: {fileID: 1328958343}
   _Rigidbody: {fileID: 765587203}
   _WindForceCenter: {fileID: 608032980}
-  _DebugText: {fileID: 1315535439}
-  ReloadTime: 1.5
-  _WindMultiplier: 80
+  _BaseSpeed: 4.25
+  _ReloadTime: 1.5
   _TurningSpeed: 20
-  _TurningTorque: 0.175
   RotationSpeedReduction: 0.15
+  _PhysicsSettings:
+    WindMultiplier: 80
+    TurnMultipler: 0.175
+    CannonPushForce: 1.5
+    MaxCannonTorque: 3
+    CannonTorqueDecay: 3
   MaxFiringAngle: 30
-  CannonballSpeed: 15
+  CannonballSpeed: 10
   CannonballGravity: 3
-  _CannonPushForce: 1.5
-  _CannonForceDecay: 3
-  _MaxCannonTorque: 3
 --- !u!114 &765587206
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3512,7 +3511,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 765587204}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1260955452
 GameObject:
@@ -3780,6 +3779,36 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1315535437}
   m_CullTransparentMesh: 0
+--- !u!1 &1318572810
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1318572811}
+  m_Layer: 0
+  m_Name: Wind Force Center
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1318572811
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1318572810}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.69, z: -2.54}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1993347979}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1328958342
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3830,7 +3859,7 @@ PrefabInstance:
     - target: {fileID: 2666777009106124464, guid: e4e5aa739572a864b95c74739e7ce5fa,
         type: 3}
       propertyPath: m_RootOrder
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2666777009106124464, guid: e4e5aa739572a864b95c74739e7ce5fa,
         type: 3}
@@ -6443,6 +6472,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 2126375578}
+  - {fileID: 1318572811}
   - {fileID: 2090936430}
   m_Father: {fileID: 0}
   m_RootOrder: 4
@@ -6472,26 +6502,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17b962ad48f903b48b2c602b6a1c8bf6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Player: {fileID: 765587200}
-  Settings:
-    BaseSpeed: 2.1
-    PursuitStartDistance: 14
-    PursuitStopDistance: 11
-    PursuitSpeedMultiplier: 1.175
-    MaxBroadsideAngle: 30
-    MaxRotationSpeed: 35
+  _Player: {fileID: 765587200}
+  _CannonballPrefab: {fileID: 2108215847276787037, guid: 6d84d27bb4a9944418c2657b1007627d,
+    type: 3}
+  _Caravel: {fileID: 482285035}
+  _Rigidbody: {fileID: 1993347976}
+  _WindForceCenter: {fileID: 1318572810}
+  _AiSettings:
+    BaseSpeed: 4
+    PursuitStartDistance: 26
+    PursuitStopDistance: 20
+    PursuitSpeedMultiplier: 1.2
+    MaxBroadsideAngle: 0
+    CircleDistanceMultiplier: 3
+    MaxRotationSpeed: 20
     SlowRadius: 30
     MaxAngularAcceleration: 20
     TimeToTarget: 0.05
-    CannonRange: 80
-    CannonAngle: 60
-    ReloadTime: 1.5
-    FireInterval: 0.2
+    CannonRange: 20
+    MaxFiringAngle: 30
+    ReloadTime: 1.25
+    FireInterval: 0.1
     CannonballGravity: 3
-    CannonballSpeed: 5
-  CannonballPrefab: {fileID: 2108215847276787037, guid: 6d84d27bb4a9944418c2657b1007627d,
-    type: 3}
-  Caravel: {fileID: 482285035}
+    CannonballSpeed: 10
+  _PhysicsSettings:
+    WindMultiplier: 80
+    TurnMultipler: 0.175
+    CannonPushForce: 1.5
+    MaxCannonTorque: 3
+    CannonTorqueDecay: 3
 --- !u!1001 &2090936429
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6542,7 +6581,7 @@ PrefabInstance:
     - target: {fileID: 2666777009106124464, guid: e4e5aa739572a864b95c74739e7ce5fa,
         type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2666777009106124464, guid: e4e5aa739572a864b95c74739e7ce5fa,
         type: 3}
