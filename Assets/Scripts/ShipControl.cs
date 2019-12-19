@@ -11,6 +11,7 @@ public abstract class ShipControl : MonoBehaviour
     public abstract Rigidbody Rigidbody { get; }
     protected abstract Vector3 WindForcePosition { get; }
     protected abstract ShipPhysicsSettings PhysicsSettings { get; }
+    protected virtual bool ShouldApplyForces => true;
 
     private Vector3 _currentCannonTorque;
 
@@ -19,16 +20,17 @@ public abstract class ShipControl : MonoBehaviour
         RequestedSpeed = 0;
     }
 
+    public abstract void Sink();
+
     protected virtual void FixedUpdate()
     {
-        //transform.position += Velocity * Time.fixedDeltaTime;
+        if (!ShouldApplyForces)
+        {
+            return;
+        }
 
         // Apply forward force
-        Vector3 forward = transform.forward;
-        forward.y = 0;
-        forward.Normalize();
-        float currentSpeed = Vector3.Project(Rigidbody.velocity, forward).magnitude;
-        Vector3 windForce = transform.forward * Util.Cap(RequestedSpeed - currentSpeed, 0.15f) * PhysicsSettings.WindMultiplier;
+        Vector3 windForce = transform.forward * Util.Cap(RequestedSpeed - GetSpeed(), 0.15f) * PhysicsSettings.WindMultiplier;
         Rigidbody.AddForceAtPosition(windForce, WindForcePosition);
 
         // Apply turning force
@@ -69,10 +71,7 @@ public abstract class ShipControl : MonoBehaviour
     {
         string result = "";
 
-        Vector3 forward = transform.forward;
-        forward.y = 0;
-        forward.Normalize();
-        result += $"Forward speed: {Vector3.Project(Rigidbody.velocity, forward).magnitude} / Desired {RequestedSpeed}\n";
+        result += $"Forward speed: {GetSpeed()} / Desired {RequestedSpeed}\n";
 
         float yawSpeed = Rigidbody.angularVelocity.y;
         result += $"Yaw speed: {Mathf.Round(yawSpeed * Mathf.Rad2Deg)} deg/s\n";
@@ -100,6 +99,16 @@ public abstract class ShipControl : MonoBehaviour
         }
 
         return (yawAngle, pitchAngle);
+    }
+
+    private float GetSpeed()
+    {
+        Vector3 forward = transform.forward;
+        forward.y = 0;
+        forward.Normalize();
+        Quaternion forwardRotation = Quaternion.LookRotation(forward);
+
+        return (Quaternion.Inverse(forwardRotation) * Rigidbody.velocity).z;
     }
 
     public static Vector3 CalculateCannonballTrajectory(Vector3 position, Vector3 target, float speed, float gravity)

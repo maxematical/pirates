@@ -63,6 +63,11 @@ public class PlayerControl : ShipControl
         _DebugText.text = GetDebugText();
     }
 
+    public override void Sink()
+    {
+        Destroy(gameObject);
+    }
+
     private void HandleFireInput()
     {
         if (Input.GetButtonDown("Fire"))

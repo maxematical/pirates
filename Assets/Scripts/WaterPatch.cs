@@ -59,6 +59,8 @@ public class WaterPatch : MonoBehaviour
 
     public float GetWaterHeight(float x, float z)
     {
+        CheckPatchInitialized();
+
         // Use bilinear interpolation to sample height values
         int xInt = Mathf.FloorToInt(x);
         int zInt = Mathf.FloorToInt(z);

@@ -12,6 +12,7 @@ public class AiControl : ShipControl
     public CaravelModelController _Caravel;
     public Rigidbody _Rigidbody;
     public GameObject _WindForceCenter;
+    public ShipBuoyancy _Buoyancy;
 
     [Header("Settings")]
     public AiSettings _AiSettings;
@@ -24,6 +25,7 @@ public class AiControl : ShipControl
     public override Rigidbody Rigidbody => _Rigidbody;
     protected override Vector3 WindForcePosition => _WindForceCenter.transform.position;
     protected override ShipPhysicsSettings PhysicsSettings => _PhysicsSettings;
+    protected override bool ShouldApplyForces => !(_state is SinkingState);
 
     void Start()
     {
@@ -68,7 +70,7 @@ public class AiControl : ShipControl
         _Caravel.CannonMaxFiringAngle = _AiSettings.MaxFiringAngle;
     }
 
-    private void OnDrawGizmos()
+    void OnDrawGizmos()
     {
         if (_state?.DesiredHeading != null)
         {
@@ -88,6 +90,14 @@ public class AiControl : ShipControl
             Gizmos.DrawCube(transform.position + Vector3.up, Vector3.one * 0.5f);
 
             _state.DrawGizmos();
+        }
+    }
+
+    public override void Sink()
+    {
+        if (!(_state is SinkingState))
+        {
+            _state = new SinkingState(this);
         }
     }
 
@@ -270,6 +280,42 @@ public class AiControl : ShipControl
         }
     }
 
+    private class SinkingState : AiState
+    {
+        public override Color GizmosColor => Color.black;
+
+        private AiControl _ai;
+        private float _startTime;
+        private float _initialDensity;
+        private float _initialDrag;
+
+        public SinkingState(AiControl ai)
+        {
+            _ai = ai;
+            _startTime = Time.time;
+            _initialDensity = _ai._Buoyancy._Density;
+            _initialDrag = _ai._Buoyancy._DragCoefficient;
+        }
+
+        public override AiState Update()
+        {
+            DesiredSpeed = 0;
+            DesiredHeading = _ai.transform.eulerAngles.y;
+
+            float time = (Time.time - _startTime) / _ai._AiSettings.SinkingTime;
+            
+            _ai._Buoyancy._Density = Mathf.Lerp(_initialDensity, _ai._AiSettings.SunkDensity, time);
+            _ai._Buoyancy._DragCoefficient = Mathf.Lerp(_initialDrag, _ai._AiSettings.SunkDrag, time);
+
+            if (_ai.transform.position.y <= _ai._AiSettings.DespawnY)
+            {
+                Destroy(_ai.gameObject);
+            }
+
+            return this;
+        }
+    }
+
     private class AiHelper
     {
         public GameObject Self { get; }
@@ -328,8 +374,17 @@ public class AiControl : ShipControl
         public float ReloadTime;
         [Tooltip("The AI will wait at least this long in between firing another cannon shot.")]
         public float FireInterval;
-
         public float CannonballGravity;
         public float CannonballSpeed;
+
+        [Header("Sinking Settings")]
+        [Tooltip("The amount of time it takes to lerp the original density and drag settings to the sunk ones.")]
+        public float SinkingTime;
+        [Tooltip("The water density constant to use once the ship sinks.")]
+        public float SunkDensity;
+        [Tooltip("The drag coefficient to use once the ship sinks.")]
+        public float SunkDrag;
+        [Tooltip("The ship will be destroyed once it is sinking and is at or below this y-position.")]
+        public float DespawnY;
     }
 }

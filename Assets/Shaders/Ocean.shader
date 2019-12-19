@@ -33,15 +33,11 @@ Shader "Custom/Ocean"
 	SubShader
 	{
 		//Pass {
-		Tags { "RenderType" = "Opaque" }
+		Tags { "RenderType" = "Opaque" "Queue" = "Geometry+501" }
 		LOD 200
 
 		CGPROGRAM
-		// Physically based Standard lighting model, and enable shadows on all light types
-		//#pragma surface surf Standard fullforwardshadows
-		//#pragma vertex vert
-		//#pragma fragment frag
-		#pragma surface surf Subsurf vertex:vert addshadow
+		#pragma surface surf Subsurf vertex:vert
 		#include "UnityCG.cginc"
 
 		// Use shader model 3.0 target, to get nicer looking lighting

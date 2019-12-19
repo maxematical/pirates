@@ -19,7 +19,7 @@ public class ShipHealth : MonoBehaviour
     {
         if (Health <= 0)
         {
-            Destroy(gameObject);
+            GetComponent<ShipControl>().Sink();
         }
     }
 }
