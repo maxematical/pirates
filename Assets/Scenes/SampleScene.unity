@@ -3377,31 +3377,31 @@ MonoBehaviour:
   Waves:
   - Comment: Main Wave
     Steepness: 2
-    Amplitude: 0.4
+    Amplitude: 0.2
     Wavelength: 3.9
     DirectionXZ: {x: 0.5, y: 1}
     Speed: 3.4
   - Comment: Secondary Wave
     Steepness: 0
-    Amplitude: 0.3
+    Amplitude: 0.15
     Wavelength: 2.5
     DirectionXZ: {x: -1.25, y: 1}
     Speed: 4
   - Comment: Small Vertical Wave
     Steepness: 3
-    Amplitude: 0.15
+    Amplitude: 0.075
     Wavelength: 2
     DirectionXZ: {x: 0.1, y: 1}
     Speed: 1.8
   - Comment: Penguins
     Steepness: 1
-    Amplitude: 0.15
+    Amplitude: 0.075
     Wavelength: 2
     DirectionXZ: {x: -0.65, y: 1}
     Speed: 4
   - Comment: Vertical Wave
     Steepness: 0.1
-    Amplitude: 0.1
+    Amplitude: 0.05
     Wavelength: 2.2
     DirectionXZ: {x: 0.1, y: 1}
     Speed: 2.5

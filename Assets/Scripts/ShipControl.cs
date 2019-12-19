@@ -27,7 +27,7 @@ public abstract class ShipControl : MonoBehaviour
         Vector3 forward = transform.forward;
         forward.y = 0;
         forward.Normalize();
-        float currentSpeed = Vector3.Project(Quaternion.Inverse(transform.rotation) * Rigidbody.velocity, Vector3.forward).z;
+        float currentSpeed = Vector3.Project(Rigidbody.velocity, forward).magnitude;
         Vector3 windForce = transform.forward * Util.Cap(RequestedSpeed - currentSpeed, 0.15f) * PhysicsSettings.WindMultiplier;
         Rigidbody.AddForceAtPosition(windForce, WindForcePosition);
 
@@ -72,7 +72,7 @@ public abstract class ShipControl : MonoBehaviour
         Vector3 forward = transform.forward;
         forward.y = 0;
         forward.Normalize();
-        result += $"Forward speed: {Vector3.Project(Quaternion.Inverse(transform.rotation) * Rigidbody.velocity, forward).z} / Desired {RequestedSpeed}\n";
+        result += $"Forward speed: {Vector3.Project(Rigidbody.velocity, forward).magnitude} / Desired {RequestedSpeed}\n";
 
         float yawSpeed = Rigidbody.angularVelocity.y;
         result += $"Yaw speed: {Mathf.Round(yawSpeed * Mathf.Rad2Deg)} deg/s\n";
