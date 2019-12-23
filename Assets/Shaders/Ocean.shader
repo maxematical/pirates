@@ -12,6 +12,7 @@ Shader "Custom/Ocean"
 		_EdgeStart("Edge Bias", float) = -1.7
 		_EdgeIncrease("Edge Increase", float) = 2
 
+		_FoamMultiplier("Foam Multiplier", float) = 50
 		_FoamAngleMin("Foam Angle Min", float) = 4 // in degrees
 		_FoamAngleMax("Foam Angle Max", float) = 6
 
@@ -33,11 +34,11 @@ Shader "Custom/Ocean"
 	SubShader
 	{
 		//Pass {
-		Tags { "RenderType" = "Opaque" "Queue" = "Geometry+501" }
+		Tags { "RenderType" = "Opaque" "Queue" = "Geometry+401" }
 		LOD 200
 
 		CGPROGRAM
-		#pragma surface surf Subsurf vertex:vert
+		#pragma surface surf Subsurf vertex:vert addshadow
 		#include "UnityCG.cginc"
 
 		// Use shader model 3.0 target, to get nicer looking lighting
@@ -90,6 +91,7 @@ Shader "Custom/Ocean"
 		float _EdgeStart;
 		float _EdgeIncrease;
 
+		float _FoamMultiplier;
 		float _FoamAngleMin; // in degrees
 		float _FoamAngleMax; // in degrees
 
@@ -222,6 +224,9 @@ Shader "Custom/Ocean"
 
 			float3 base = lerp(_BaseColor, _EdgeColor, saturate(_EdgeStart + _EdgeIncrease * objectPos.y));
 
+			float fresnel = 1 - dot(i.worldNormal, i.viewDir);
+			base = lerp(_BaseColor, _EdgeColor, fresnel * 3);
+
 			float3 seaUvOffset = tex2D(_SeaDistortion, i.originalPos.xz * 0.005 + i.worldPos.xz * 0.005 + _Time[1] * 1.0 * float2(0.01, 0.02));
 			
 			float2 voronoiUv1 = 0.4 * (i.originalPos.xz * 0.025 * 0.25 + i.worldPos.xz * 0.025 * 0.75);
@@ -229,7 +234,8 @@ Shader "Custom/Ocean"
 			float3 voronoi1 = (greaterThan(tex2D(_Voronoi, voronoiUv1), 0.45)) * 0.4 * 2.6;
 			float3 voronoi2 = (greaterThan(tex2D(_Voronoi, voronoiUv2), 0.4)) * 0.4 * 2.6;
 
-			float foamAmount = max(0, 0.3 * objectPos.y + 0.4);
+			//float foamAmount = max(0, 0.3 * objectPos.y + 0.4);
+			float foamAmount = (1 - i.worldNormal.y) * _FoamMultiplier;
 			//float foamAmount = 1;
 			float texturedFoamAmount = greaterThan(foamAmount * voronoi1 + foamAmount * voronoi2, 1.05) * 0.8;
 			o.Albedo = lerp(base, 1.0, texturedFoamAmount);
