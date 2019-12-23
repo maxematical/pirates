@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public abstract class ShipControl : MonoBehaviour
@@ -65,6 +66,36 @@ public abstract class ShipControl : MonoBehaviour
         relativeTorque.x = relativeTorque.y = 0;
 
         _currentCannonTorque += Quaternion.Inverse(transform.rotation) * relativeTorque;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        GameObject other = collision.gameObject;
+        ShipControl otherShip = other.GetComponent<ShipControl>();
+
+        // Handle ramming with enemy ship
+        if (otherShip != null)
+        {
+            // Compute the average dot product between the contact normals and the forward direction
+            // The closer it is to -1 (i.e. average normal and forward are opposite), the more directly we are going
+            // into the collision, and the more damage we will deal to them
+            float avgDot = 0;
+            for (int i = 0; i < collision.contactCount; i++)
+            {
+                avgDot += Vector3.Dot(collision.GetContact(i).normal, transform.forward);
+            }
+            avgDot /= Mathf.Max(1, collision.contactCount);
+
+            // The closer we are to -1, the less damage we deal to this ship
+            float damageToThisShip = Mathf.Abs(-1 - avgDot);
+
+            // Square the damage then scale it by the velocity of the collision
+            damageToThisShip *= damageToThisShip;
+            damageToThisShip *= collision.relativeVelocity.magnitude * 2f;
+
+            // Deal the damage to this ship
+            GetComponent<ShipHealth>().Health -= Mathf.CeilToInt(damageToThisShip);
+        }
     }
 
     protected string GetDebugText()

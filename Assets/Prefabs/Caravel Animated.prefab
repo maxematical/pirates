@@ -244,7 +244,7 @@ MeshCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6855071631871286225}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: b091cde191e070b45890866738ffad73, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -353,17 +353,7 @@ PrefabInstance:
       propertyPath: m_LocalScale.y
       value: 0.7174593
       objectReference: {fileID: 0}
-    - target: {fileID: -6890616303806842731, guid: f1e645c94fe42534bab22bc03b1f9bb5,
-        type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8950703377410299952, guid: f1e645c94fe42534bab22bc03b1f9bb5,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: -5062237657083821242, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    - target: {fileID: -1922168255660601135, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}
       propertyPath: m_RootOrder
       value: 2
@@ -373,20 +363,30 @@ PrefabInstance:
       propertyPath: m_RootOrder
       value: 2
       objectReference: {fileID: 0}
-    - target: {fileID: -2751895459173681826, guid: f1e645c94fe42534bab22bc03b1f9bb5,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 2
-      objectReference: {fileID: 0}
     - target: {fileID: -4240595342255953938, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}
       propertyPath: m_RootOrder
       value: 2
       objectReference: {fileID: 0}
-    - target: {fileID: -1922168255660601135, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+    - target: {fileID: -2751895459173681826, guid: f1e645c94fe42534bab22bc03b1f9bb5,
         type: 3}
       propertyPath: m_RootOrder
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -5062237657083821242, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -8950703377410299952, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -6890616303806842731, guid: f1e645c94fe42534bab22bc03b1f9bb5,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: -3330902553719985500, guid: f1e645c94fe42534bab22bc03b1f9bb5, type: 3}
