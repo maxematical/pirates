@@ -39,11 +39,15 @@ The only major challenge I had with Gerstner Waves is that since they aren't com
 
 If you want to see the code for the ocean simulation, check out the [ocean.shader](https://github.com/maxematical/pirates/blob/master/Assets/Shaders/Ocean.shader) file I have in the repository. For the user-configurable parameters of the ocean, I pass them in as uniforms from my C# script. Please note all of this is licensed under all rights reserved, so don't copy any of the code, but if you're trying to implement Gerstner Waves maybe it will be helpful as a guide just to see if you've got any of your code wrong.
 
+![ocean picture](https://i.imgur.com/ZslvYEc.png)
+
 Anyways, the other half(!) of making the ocean had to do with lighting and coloring it properly. This, again, I am not 100% satisfied with and might return to later, but for now it looks decent enough that I am happy with it.
 
 If you have read much about 3D rendering, the basic principles of shading the ocean are generally pretty simple, so it was mostly just a matter of combining these principles in the right way to get a nice looking ocean.
 
 For starters, I had your basic Lambertian lighting model with a nice blue diffuse color and a bit of specular component for the sun. Then I added some subsurface scattering, which if you haven't heard of this before, is basically when light passes through a mostly solid object and comes out tinted -- think of holding your hand over a flashlight and seeing that your fingers look bright red and a bit glowing. I also added some fresnel effect (pronounced fruh-nel), which is when a the part of an object you are looking at from the side appears slightly lighter than the part you are looking at head-on.
+
+![ocean picture](https://i.imgur.com/M0w8xbd.png)
 
 This looked okay, but it still didn't exactly look like an ocean. When you think about it, real-life seawater is full of foam, grease, and random bits of stuff floating in the water. The above principles get you something that mimics water, but doesn't have all the details you would expect in water.
 
