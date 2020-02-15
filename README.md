@@ -8,9 +8,9 @@ The pirate ship model was made by me using [Blender](https://blender.org) and is
 
 I never completely finished this project and stopped working on it, so it's still a bit rough around the edges and there isn't really much content at all anyways. I might return to it later and make it into a proper game, but right now I'm working on other stuff.
 
-![screenshot](https://i.imgur.com/3nDo1ji.png)
+[Video](https://imgur.com/EbdAkm0)
 
-![screenshot GIF](https://i.imgur.com/EbdAkm0h.gif)
+![screenshot](https://i.imgur.com/3nDo1ji.png)
 
 In the rest of this readme, I'll discuss how I implemented some of the algorithms in the pirate game to make it look (semi) realistic and fun to play.
 
@@ -55,17 +55,13 @@ If you want to see the code for the surface of the water, check out the same [oc
 
 This README is a work in progress, but trust me this section will be really awesome if I ever decide to actually finish it
 
-![physics simulation demo](https://i.imgur.com/p1xw45E.gif)
+[Physics simulation demo](https://imgur.com/p1xw45E)
 
 ## Features
 
 - an AI boat that circles the player and shoots cannonballs at them
 - cartoonish but decent looking water simulation
 - buoyancy physics algorithm that ensures objects and ships in the water move in the water in a realistic manner
-
-## Contributing
-
-Unfortunately, I am a pirate and don't take contributions
 
 ## License
 
