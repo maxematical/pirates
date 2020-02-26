@@ -25,7 +25,7 @@ You can run this game locally by cloning the repo then opening it in Unity versi
 
 One of the primary elements if you are playing pirate game is the fact that you are constantly surrounded by water. Therefore, I spent a bunch of time trying to make sure the water looked and felt right.
 
-(Note: in this section, I'm primarily talking about the water itself and not how objects interact with the water)
+(Note: in this section, I'm primarily talking about the water itself and not how objects interact with the water. Also, the below paragraphs are meant more as a "high-level" explanation of how everything works, because I'm mostly mentioning the different concepts and algorithms I used for the water. I don't give many code examples since for pretty much every one of these concepts, you can just type it into google and find a tutorial on how to implement it. In fact, that's actually exactly what I did when I was writing the code!)
 
 When you're looking to make good-looking water, there are pretty much two basic components you have to nail down before you get anywhere else: the actual shape (geometry) of the waves, and then also to some extent the shading and color of the waves. On top of that you can have interactions with objects like foam around things floating in the water, but for now I've mostly just focused on the first two things for the water.
 
@@ -72,6 +72,8 @@ However, with ONLY these principles, the water still didn't exactly look like an
 Again, I haven't gotten it perfect yet, but the main thing I've done so far to combat this is to add a bit of foam to the water. I did this by taking a texture with some [cell noise](https://en.wikipedia.org/wiki/Worley_noise) and then sampling it at two different UV coordinates. I then combine the two samples to get a foam pattern that looks somewhat random and in motion.
 
 To enhance the illusion of frothy, foamy water, I vary the amount of foam depending on how slanted the surface of the water is at a given point, which also happens to be right before or after the crest of a wave, which is where you would expect more foam in real life.
+
+That being said, if I were to work on this agian, I'd still probably try to improve the foam a bunch more. Although it does make the water a lot better, I still don't think it's quite enough to combat the "plastic-y" look of the water shader right now.
 
 If you want to see the code for the surface of the water, check out the same [ocean.shader](https://github.com/maxematical/pirates/blob/master/Assets/Shaders/Ocean.shader) file. The code pertaining to the surface of the water is mostly within the `surf` and `LightingSubsurf` functions. <sup>(Thanks to Unity's great abundance of features, especially compared to other game engines like Unreal, I had to implement my own lighting function to get subsurface scattering working)</sup>
 
