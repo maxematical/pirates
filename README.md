@@ -8,9 +8,9 @@ The pirate ship model was made by me using [Blender](https://blender.org) and is
 
 I never completely finished this project and stopped working on it, so it's still a bit rough around the edges and there isn't really much content at all anyways. I might return to it later and make it into a proper game, but right now I'm working on other stuff.
 
-[Video](https://imgur.com/EbdAkm0)
+Click on this image for a video:
 
-![screenshot](https://i.imgur.com/3nDo1ji.png)
+[<img src="https://i.imgur.com/3nDo1ji.png" alt="screenshot of boats fighting" width="600" />](https://imgur.com/EbdAkm0)
 
 In the rest of this readme, I'll discuss how I implemented some of the algorithms in the pirate game to make it look (semi) realistic and fun to play.
 
@@ -35,25 +35,45 @@ I looked for other methods and another technique I found was called Gerstner Wav
 
 From there, the key is to use the position function they give you `P(x,y,t)` to offset each vertex of the ocean mesh every frame. Keep in mind this doesn't just offset the vertices vertically, but also moves them horizontally, which helps to avoid the sea from looking like a giant sine wave. This can be done using C#, which I did initially, but eventually wrote a vertex shader that offsets the vertices on the GPU. This has the advantage that it is much faster than performing calculations on the CPU, since it can very easily process multiple vertices in parallel.
 
+```hlsl
+// The basic code of how to move a vertex by the position function, to implement Gerstner Waves
+
+for (int i = 0; i < numberWaves; i++)
+{
+	float steepness, amplitude, frequency, phaseConstant = /* settings of this wave */;
+	float3 direction = /* direction of this wave */;
+
+	pos.x += steepness * amplitude * direction.x * cos(dot(frequency * direction, xz) + phaseConstant * time);
+	pos.z += steepness * amplitude * direction.z * cos(dot(frequency * direction, xz) + phaseConstant * time);
+	pos.y += amplitude * sin(dot(frequency * direction, xz) + phaseConstant * time);
+}
+```
+
 The only major challenge I had with Gerstner Waves is that since they aren't completely based on a physical simulation, you have to explicitly state the parameters for the waves in order for them to look good. I played around with it for a few hours and think I've gotten something that looks somewhat realistic, though obviously I'd have to spend a bunch more time if I wanted it to look perfect or good under different weather conditions.
 
-If you want to see the code for the ocean simulation, check out the [ocean.shader](https://github.com/maxematical/pirates/blob/master/Assets/Shaders/Ocean.shader) file I have in the repository. For the user-configurable parameters of the ocean, I pass them in as uniforms from my C# script. Please note all of this is licensed under all rights reserved, so don't copy any of the code, but if you're trying to implement Gerstner Waves maybe it will be helpful as a guide just to see if you've got any of your code wrong.
+The code for the ocean simulation is stored in the [ocean.shader](https://github.com/maxematical/pirates/blob/master/Assets/Shaders/Ocean.shader) file. The user-configurable parameters of the ocean are passed in as uniforms from my C# script.
 
-![ocean picture](https://i.imgur.com/ZslvYEc.png)
+(Please note all of this is TECHNICALLY licensed under all rights reserved so try to use this as more a model for your code rather than copying and pasting!)
+
+<img src="https://i.imgur.com/ZslvYEc.png" alt="ocean picture" width="600" />
 
 Anyways, the other half(!) of making the ocean had to do with lighting and coloring it properly. This, again, I am not 100% satisfied with and might return to later, but for now it looks decent enough that I am happy with it.
 
 If you have read much about 3D rendering, the basic principles of shading the ocean are generally pretty simple, so it was mostly just a matter of combining these principles in the right way to get a nice looking ocean.
 
-For starters, I had your basic Lambertian lighting model with a nice blue diffuse color and a bit of specular component for the sun. Then I added some subsurface scattering, which if you haven't heard of this before, is basically when light passes through a mostly solid object and comes out tinted -- think of holding your hand over a flashlight and seeing that your fingers look bright red and a bit glowing. I also added some fresnel effect (pronounced fruh-nel), which is when a the part of an object you are looking at from the side appears slightly lighter than the part you are looking at head-on.
+The water shader uses the Lambert lighting model with a nice blue diffuse color and a bit of specular component for the sun's reflections. It also uses subsurface scattering, which is basically the effect of light passing into an object, spreading out inside of it, and then exiting and causing a "glowy" effect. (An example of this is when you hold your hand over a flashlight and your fingers become glowing red.) The water also has a small amount of Fresnel effect, which is when a the part of an object you are looking at from the side appears slightly lighter than the part you are looking at head-on.
 
-![ocean picture](https://i.imgur.com/M0w8xbd.png)
+These principles were generally relatively straightforward, and it was possible to google how to implement these fairly easy. Again, most of the difficulty in this was just tweaking the parameters so the water looked right. This is 90% of the water shading code and it works decently well.
 
-This looked okay, but it still didn't exactly look like an ocean. When you think about it, real-life seawater is full of foam, grease, and random bits of stuff floating in the water. The above principles get you something that mimics water, but doesn't have all the details you would expect in water.
+<img src="https://i.imgur.com/M0w8xbd.png" alt="ocean picture" width="600" />
 
-Again, I haven't gotten it perfect yet, but the main thing I've done to combat this is to add a bit of foam to the water, especially in areas just after a wave where you would expect it to be more frothy there. I did this by taking a texture with some [cell noise](https://en.wikipedia.org/wiki/Worley_noise) and then sampling it at two different UV coordinates. I then combine the two samples to get a foam pattern that looks somewhat random and in motion. I add some of this value into the water's base surface color, depending on how slanted the surface of the water is at that given point.
+However, with ONLY these principles, the water still didn't exactly look like an ocean. When you think about it, real-life seawater is full of foam, grease, and random bits of stuff floating in the water. The above princples still don't have all the details you would expect in a real ocean.
 
-If you want to see the code for the surface of the water, check out the same [ocean.shader](https://github.com/maxematical/pirates/blob/master/Assets/Shaders/Ocean.shader) file. The code pertaining to the surface of the water is mostly within the `surf` and `LightingSubsurf` functions. (Thanks to Unity's great abundance of features, especially compared to other game engines like Unreal, I had to implement my own lighting function to get subsurface scattering working)
+Again, I haven't gotten it perfect yet, but the main thing I've done so far to combat this is to add a bit of foam to the water. I did this by taking a texture with some [cell noise](https://en.wikipedia.org/wiki/Worley_noise) and then sampling it at two different UV coordinates. I then combine the two samples to get a foam pattern that looks somewhat random and in motion.
+
+To enhance the illusion of frothy, foamy water, I vary the amount of foam depending on how slanted the surface of the water is at a given point, which also happens to be right before or after the crest of a wave, which is where you would expect more foam in real life.
+
+If you want to see the code for the surface of the water, check out the same [ocean.shader](https://github.com/maxematical/pirates/blob/master/Assets/Shaders/Ocean.shader) file. The code pertaining to the surface of the water is mostly within the `surf` and `LightingSubsurf` functions. <sup>(Thanks to Unity's great abundance of features, especially compared to other game engines like Unreal, I had to implement my own lighting function to get subsurface scattering working)</sup>
 
 ## How I implemented buoyancy
 
